@@ -11,6 +11,13 @@ pool:
   vmImage: $(imageName)
 
 steps:
+- task: JavaToolInstaller@1
+  displayName: 'Set up JDK 17'
+  inputs:
+    versionSpec: '17'
+    jdkArchitectureOption: 'x64'
+    jdkSourceOption: 'PreInstalled'
+
 - powershell: |
    if($PSVersionTable.PSVersion.Major -lt 6)
    {
@@ -23,6 +30,7 @@ steps:
   displayName: 'Maven sonar-ps-plugin/pom.xml'
   inputs:
     mavenPomFile: 'sonar-ps-plugin/pom.xml'
+    jdkVersionOption: '1.17'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'

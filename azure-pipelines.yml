@@ -1,15 +1,14 @@
 strategy:
   matrix:
     linux:
-      imageName: 'ubuntu-16.04'
+      imageName: 'ubuntu-latest'
     mac:
-      imageName: 'macos-10.13'
+      imageName: 'macos-latest'
     windows:
-      imageName: 'vs2017-win2016'
+      imageName: 'windows-latest'
 
 pool:
   vmImage: $(imageName)
-  demands: maven
 
 steps:
 - powershell: |
@@ -20,19 +19,19 @@ steps:
    Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.17.1 -Scope "CurrentUser" -Force
   displayName: 'Install PSScriptAnalyzer'
 
-- task: Maven@3
+- task: Maven@4
   displayName: 'Maven sonar-ps-plugin/pom.xml'
   inputs:
     mavenPomFile: 'sonar-ps-plugin/pom.xml'
 
 - task: CopyFiles@2
-  displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
   inputs:
     SourceFolder: '$(system.defaultworkingdirectory)'
     Contents: '**/*.jar'
-    TargetFolder: '$(build.artifactstagingdirectory)'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
 - task: PublishBuildArtifacts@1
   inputs:
-    pathtoPublish: '$(Build.artifactstagingdirectory)' 
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
     artifactName: 'build-$(Agent.OS)'    

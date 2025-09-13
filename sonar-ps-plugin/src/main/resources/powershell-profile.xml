@@ -28,6 +28,10 @@
             <repositoryKey>ps-psanalyzer</repositoryKey>
         </rule>
         <rule>
+            <key>PSAvoidExclaimOperator</key>
+            <repositoryKey>ps-psanalyzer</repositoryKey>
+        </rule>
+        <rule>
             <key>PSAvoidGlobalAliases</key>
             <repositoryKey>ps-psanalyzer</repositoryKey>
         </rule>
@@ -85,6 +89,10 @@
         </rule>
         <rule>
             <key>PSAvoidUsingUsernameAndPasswordParams</key>
+            <repositoryKey>ps-psanalyzer</repositoryKey>
+        </rule>
+        <rule>
+            <key>PSAvoidUsingAllowUnencryptedAuthentication</key>
             <repositoryKey>ps-psanalyzer</repositoryKey>
         </rule>
         <rule>

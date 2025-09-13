@@ -73,6 +73,18 @@
         <severity>MAJOR</severity>
     </rule>
     <rule>
+        <key>PSAvoidExclaimOperator</key>
+        <internalKey>PSAvoidExclaimOperator</internalKey>
+        <name>Avoid exclaim operator</name>
+        <description>The negation operator ! should not be used for readability purposes. Use -not instead.</description>
+        <cardinality>SINGLE</cardinality>
+        <remediationFunction>LINEAR</remediationFunction>
+        <descriptionFormat>MARKDOWN</descriptionFormat>
+        <remediationFunctionBaseEffort />
+        <debtRemediationFunctionCoefficient>5min</debtRemediationFunctionCoefficient>
+        <severity>MAJOR</severity>
+    </rule>
+    <rule>
         <key>PSAvoidGlobalAliases</key>
         <internalKey>PSAvoidGlobalAliases</internalKey>
         <name>Avoid global aliases.</name>
@@ -201,8 +213,8 @@
         <remediationFunction>LINEAR</remediationFunction>
         <descriptionFormat>MARKDOWN</descriptionFormat>
         <remediationFunctionBaseEffort />
-        <debtRemediationFunctionCoefficient>5min</debtRemediationFunctionCoefficient>
-        <severity>MAJOR</severity>
+        <debtRemediationFunctionCoefficient>15min</debtRemediationFunctionCoefficient>
+        <severity>BLOCKER</severity>
     </rule>
     <rule>
         <key>PSAvoidSemicolonsAsLineTerminators</key>
@@ -251,6 +263,18 @@
         <remediationFunctionBaseEffort />
         <debtRemediationFunctionCoefficient>15min</debtRemediationFunctionCoefficient>
         <severity>BLOCKER</severity>
+    </rule>
+    <rule>
+        <key>PSAvoidUsingAllowUnencryptedAuthentication</key>
+        <internalKey>PSAvoidUsingAllowUnencryptedAuthentication</internalKey>
+        <name>Avoid AllowUnencryptedAuthentication Switch</name>
+        <description>Avoid sending credentials and secrets over unencrypted connections.</description>
+        <cardinality>SINGLE</cardinality>
+        <remediationFunction>LINEAR</remediationFunction>
+        <descriptionFormat>MARKDOWN</descriptionFormat>
+        <remediationFunctionBaseEffort />
+        <debtRemediationFunctionCoefficient>5min</debtRemediationFunctionCoefficient>
+        <severity>MAJOR</severity>
     </rule>
     <rule>
         <key>PSAvoidUsingBrokenHashAlgorithms</key>
@@ -472,7 +496,7 @@
         <key>PSPossibleIncorrectUsageOfRedirectionOperator</key>
         <internalKey>PSPossibleIncorrectUsageOfRedirectionOperator</internalKey>
         <name>'&gt;' is not a comparison operator. Use  '-gt' (greater than) or '-ge' (greater or equal).</name>
-        <description>When switching between different languages it is easy to forget that '&gt;' does not mean 'great than' in PowerShell.</description>
+        <description>When switching between different languages it is easy to forget that '&gt;' does not mean 'greater than' in PowerShell.</description>
         <cardinality>SINGLE</cardinality>
         <remediationFunction>LINEAR</remediationFunction>
         <descriptionFormat>MARKDOWN</descriptionFormat>
@@ -580,7 +604,7 @@
         <key>PSUseCorrectCasing</key>
         <internalKey>PSUseCorrectCasing</internalKey>
         <name>Use exact casing of cmdlet/function/parameter name.</name>
-        <description>For better readability and consistency, use the exact casing of the cmdlet/function/parameter.</description>
+        <description>For better readability and consistency, use consistent casing.</description>
         <cardinality>SINGLE</cardinality>
         <remediationFunction>LINEAR</remediationFunction>
         <descriptionFormat>MARKDOWN</descriptionFormat>
@@ -640,7 +664,7 @@
         <key>PSUsePSCredentialType</key>
         <internalKey>PSUsePSCredentialType</internalKey>
         <name>Use PSCredential type.</name>
-        <description>For PowerShell 4.0 and earlier, a parameter named Credential with type PSCredential must have a credential transformation attribute defined after the PSCredential type attribute. </description>
+        <description>For PowerShell 4.0 and earlier, a parameter named Credential with type PSCredential must have a credential transformation attribute defined after the PSCredential type attribute.</description>
         <cardinality>SINGLE</cardinality>
         <remediationFunction>LINEAR</remediationFunction>
         <descriptionFormat>MARKDOWN</descriptionFormat>
@@ -795,7 +819,7 @@
     <rule>
         <key>PSDSCStandardDSCFunctionsInResource</key>
         <internalKey>PSDSCStandardDSCFunctionsInResource</internalKey>
-        <name>Use Standard Get/Set/Test TargetResource functions in DSC Resource </name>
+        <name>Use Standard Get/Set/Test TargetResource functions in DSC Resource</name>
         <description>DSC Resource must implement Get, Set and Test-TargetResource functions. DSC Class must implement Get, Set and Test functions.</description>
         <cardinality>SINGLE</cardinality>
         <remediationFunction>LINEAR</remediationFunction>

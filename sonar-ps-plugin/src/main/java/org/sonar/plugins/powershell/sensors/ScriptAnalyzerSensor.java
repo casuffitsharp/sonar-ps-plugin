@@ -50,9 +50,7 @@ public class ScriptAnalyzerSensor extends BaseSensor implements org.sonar.api.ba
             final FileSystem fileSystem = context.fileSystem();
             final File baseDir = fileSystem.baseDir();
 
-            final String sourceDir = SystemUtils.IS_OS_WINDOWS
-                    ? String.format("'%s'", baseDir.toPath().toFile().getAbsolutePath())
-                    : baseDir.toPath().toFile().getAbsolutePath();
+            final String sourceDir = baseDir.toPath().toFile().getAbsolutePath();
 
             final String outFile = folder.newFile().toPath().toFile().getAbsolutePath();
 

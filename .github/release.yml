@@ -1,0 +1,14 @@
+changelog:
+  categories:
+    - title: "Breaking changes"
+      labels: ["breaking", "major"]
+    - title: "New Features"
+      labels: ["feature", "enhancement"]
+    - title: "Bug Fixes"
+      labels: ["bug", "fix"]
+    - title: "Documentation"
+      labels: ["documentation"]
+    - title: "Maintenance"
+      labels: ["chore", "refactor", "dependencies"]
+  exclude:
+    labels: ["skip-changelog"]

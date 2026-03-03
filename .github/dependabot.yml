@@ -3,9 +3,9 @@ updates:
   - package-ecosystem: "maven"
     directory: "/sonar-ps-plugin"
     schedule:
-      interval: "weekly"
+      interval: "daily"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"

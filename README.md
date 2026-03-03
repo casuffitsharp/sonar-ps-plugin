@@ -47,10 +47,10 @@ The following options can be overridden either in SonarQube Administration or in
 | Plugin version | SonarQube | PSScriptAnalyzer | Java |
 |---|---|---|---|
 | 0.7.0 | 9.9+ | 1.20+ | 17+ |
-| 0.5.3 | 8.9.2+ | 1.20+ | 17+ |
-| 0.5.1 | 8.9.2+ | 1.20+ | 11+ |
-| 0.5.0 | 6.7.7+ | 1.18.1 | 8+ |
-| 0.3.0 | 6.3+ | 1.17.1 | 8+ |
+| [0.5.3](https://github.com/gretard/sonar-ps-plugin/releases/tag/0.5.3) | 8.9.2+ | 1.20+ | 17+ |
+| [0.5.1](https://github.com/gretard/sonar-ps-plugin/releases/tag/0.5.1) | 8.9.2+ | 1.20+ | 11+ |
+| [0.5.0](https://github.com/gretard/sonar-ps-plugin/releases/tag/0.5.0) | 6.7.7+ | 1.18.1 | 8+ |
+| [0.3.0](https://github.com/gretard/sonar-ps-plugin/releases/tag/0.3.0) | 6.3+ | 1.17.1 | 8+ |
 
 ## Building
 

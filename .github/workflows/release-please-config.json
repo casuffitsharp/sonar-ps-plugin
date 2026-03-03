@@ -1,0 +1,9 @@
+{
+  "release-type": "maven",
+  "packages": {
+    ".": {
+      "package-name": "sonar-ps-plugin",
+      "pom-path": "sonar-ps-plugin/pom.xml"
+    }
+  }
+}

@@ -25,12 +25,12 @@ Currently the plugin supports:
 4. Prepare build agent machines:
    - **WINDOWS**:
      - Install [PSScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer) on your build machine where you plan to run sonar scanner:
-     - In a PowerShell terminal run (more [info](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules#installing-psscriptanalyzer)): `Install-Module -Name PSScriptAnalyzer -Force`
+     - In a PowerShell terminal run (more [info](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules#installing-psscriptanalyzer)): `Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope "CurrentUser" -Force`
      - Verify the module installed successfully: `Invoke-ScriptAnalyzer -ScriptDefinition '"b" = "b"; function eliminate-file () { }'`
      - You can check the [sample project](https://github.com/casuffitsharp/sonar-ps-plugin/tree/master/sampleProject) to test the plugin and verify configuration
    - **LINUX**:
      - Install PowerShell on Linux (for example Ubuntu: https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.4)
-     - Install PSScriptAnalyzer: `pwsh -Command "Install-Module -Name PSScriptAnalyzer -Force"`
+     - Install PSScriptAnalyzer: `pwsh -Command "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force"`
      - Test the module: `pwsh -Command "Invoke-ScriptAnalyzer -ScriptDefinition '\"b\" = \"b\"; function eliminate-file () { }'"`
      - Specify the `sonar.ps.executable` property to point to the PowerShell executable on Linux (find it with `whereis pwsh`): `sonar.ps.executable="/usr/bin/pwsh"`
 
@@ -62,7 +62,7 @@ Requirements: JDK 17+, Maven, PSScriptAnalyzer
 
 ```bash
 # Install PSScriptAnalyzer (required for tests)
-pwsh -Command "Install-Module -Name PSScriptAnalyzer -Force"
+pwsh -Command "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force"
 
 # Build the plugin
 mvn -f sonar-ps-plugin/pom.xml package

@@ -20,6 +20,7 @@ public class TokensReader {
     public Tokens read(final File file) throws Throwable {
         final Tokens tokens = new Tokens();
         final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         final DocumentBuilder builder = factory.newDocumentBuilder();
         final Document doc;
         try (final FileInputStream fileinputstream = new FileInputStream(file)) {

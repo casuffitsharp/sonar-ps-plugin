@@ -5,17 +5,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.SensorDescriptor;
 import org.sonar.api.config.Configuration;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
 import org.sonar.plugins.powershell.Constants;
 import org.sonar.plugins.powershell.PowershellLanguage;
 
 public abstract class BaseSensor implements org.sonar.api.batch.sensor.Sensor {
 
-    private static final Logger LOGGER = Loggers.get(BaseSensor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseSensor.class);
 
     @Override
     public void describe(final SensorDescriptor descriptor) {

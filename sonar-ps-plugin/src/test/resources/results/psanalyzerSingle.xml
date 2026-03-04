@@ -8,7 +8,4 @@
     <Property Name="Severity" Type="Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticSeverity">Information</Property>
     <Property Name="File" Type="System.String">C:\test.ps1</Property>
   </Object>
-   <Object Type="System.Management.Automation.PSCustomObject">
-   
-   </Object>
 </Objects>

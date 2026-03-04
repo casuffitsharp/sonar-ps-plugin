@@ -50,5 +50,5 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=casuffitsharp_sonar-ps-plugin
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=casuffitsharp_sonar-ps-plugin -Pcoverage
         working-directory: sonar-ps-plugin

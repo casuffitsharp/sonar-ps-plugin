@@ -33,7 +33,7 @@ steps:
    {
      Install-PackageProvider nuget -Force
    }
-   Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.17.1 -Scope "CurrentUser" -Force
+   Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope "CurrentUser" -Force
   displayName: 'Install PSScriptAnalyzer'
 
 - task: Maven@4

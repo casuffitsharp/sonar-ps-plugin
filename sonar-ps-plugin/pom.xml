@@ -15,7 +15,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<sonar.apiVersion>13.4.3.4290</sonar.apiVersion>
-		<sonar.testingHarnessVersion>26.1.0.118079</sonar.testingHarnessVersion>
+		<sonar.testingHarnessVersion>26.3.0.120487</sonar.testingHarnessVersion>
 		<jdk.min.version>21</jdk.min.version>
 		<sonar.organization>casuffitsharp</sonar.organization>
 	</properties>

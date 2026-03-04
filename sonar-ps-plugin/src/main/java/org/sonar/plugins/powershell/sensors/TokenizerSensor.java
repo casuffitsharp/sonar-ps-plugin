@@ -18,6 +18,7 @@ import org.sonar.plugins.powershell.Constants;
 import org.sonar.plugins.powershell.PowershellLanguage;
 import org.sonar.plugins.powershell.ast.Tokens;
 import org.sonar.plugins.powershell.fillers.CComplexityFiller;
+import org.sonar.plugins.powershell.fillers.ContextWriteGuard;
 import org.sonar.plugins.powershell.fillers.CpdFiller;
 import org.sonar.plugins.powershell.fillers.HalsteadComplexityFiller;
 import org.sonar.plugins.powershell.fillers.HighlightingFiller;
@@ -60,9 +61,12 @@ public class TokenizerSensor extends BaseSensor {
             LOGGER.warn("Exception while copying tokenizer script", e1);
             return;
         }
+
         final String scriptFile = parserFile.getAbsolutePath();
         final org.sonar.api.batch.fs.FileSystem fs = context.fileSystem();
         final FilePredicates p = fs.predicates();
+        final ContextWriteGuard writeGuard = new ContextWriteGuard();
+
         try (ExecutorService service = Executors.newWorkStealingPool()) {
             final Iterable<InputFile> inputFiles = fs.inputFiles(p.and(p.hasLanguage(PowershellLanguage.KEY)));
             for (final InputFile inputFile : inputFiles) {
@@ -76,70 +80,66 @@ public class TokenizerSensor extends BaseSensor {
                     continue;
                 }
 
-                service.submit(new Runnable() {
+                service.submit(() -> {
+                    try {
+                        final String resultsFile = folder.newFile().toPath().toFile().getAbsolutePath();
 
-                    @Override
-                    public void run() {
-                        try {
-                            final String resultsFile = folder.newFile().toPath().toFile().getAbsolutePath();
-
-                            final String[] args = new String[] { powershellExecutable, scriptFile, "-inputFile",
-                                    analysisFile, "-output", resultsFile };
-                            if (isDebugEnabled) {
-                                LOGGER.debug(String.format("Running %s command", Arrays.toString(args)));
-                            }
-
-                            final Process process = new ProcessBuilder(args).inheritIO().start();
-
-                            boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
-                            if (!finished) {
-                                LOGGER.warn("Tokenizer timed out after {}s on {} (pid={}). Killing process.",
-                                        timeoutSeconds, analysisFile, process.pid());
-
-                                process.destroyForcibly();
-                                try {
-                                    boolean terminated = process.waitFor(5, TimeUnit.SECONDS);
-                                    if (!terminated) {
-                                        LOGGER.warn(
-                                                "Tokenizer process did not terminate after being destroyed (pid={})",
-                                                process.pid());
-                                    }
-                                } catch (final InterruptedException ie) {
-                                    Thread.currentThread().interrupt();
-                                    LOGGER.warn(
-                                            "Interrupted while waiting for tokenizer process to terminate (pid={})",
-                                            process.pid(), ie);
-                                }
-
-                                return;
-                            }
-
-                            int pReturnValue = process.exitValue();
-                            if (pReturnValue != 0) {
-                                LOGGER.warn("Tokenizer returned non-zero exit code {} on {}", pReturnValue,
-                                        analysisFile);
-                                return;
-                            }
-                            final File tokensFile = new File(resultsFile);
-                            if (!tokensFile.exists() || tokensFile.length() <= 0) {
-                                LOGGER.warn(String.format(
-                                        "Tokenizer did not run successfully on %s file. Please check file contents.",
-                                        analysisFile));
-                                return;
-                            }
-
-                            final Tokens tokens = reader.read(tokensFile);
-                            for (final IFiller filler : fillers) {
-                                filler.fill(context, inputFile, tokens);
-                            }
-                            if (isDebugEnabled) {
-                                LOGGER.debug(String.format("Running analysis for %s to %s finished.", analysisFile,
-                                        resultsFile));
-                            }
-                        } catch (final Throwable e) {
-                            LOGGER.warn(String.format("Unexpected exception while running tokenizer on %s", inputFile),
-                                    e);
+                        final String[] args = new String[] { powershellExecutable, scriptFile, "-inputFile",
+                                analysisFile, "-output", resultsFile };
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("Running %s command", Arrays.toString(args)));
                         }
+
+                        final Process process = new ProcessBuilder(args).inheritIO().start();
+
+                        boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+                        if (!finished) {
+                            LOGGER.warn("Tokenizer timed out after {}s on {} (pid={}). Killing process.",
+                                    timeoutSeconds, analysisFile, process.pid());
+
+                            process.destroyForcibly();
+                            try {
+                                boolean terminated = process.waitFor(5, TimeUnit.SECONDS);
+                                if (!terminated) {
+                                    LOGGER.warn(
+                                            "Tokenizer process did not terminate after being destroyed (pid={})",
+                                            process.pid());
+                                }
+                            } catch (final InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                LOGGER.warn(
+                                        "Interrupted while waiting for tokenizer process to terminate (pid={})",
+                                        process.pid(), ie);
+                            }
+
+                            return;
+                        }
+
+                        int pReturnValue = process.exitValue();
+                        if (pReturnValue != 0) {
+                            LOGGER.warn("Tokenizer returned non-zero exit code {} on {}", pReturnValue,
+                                    analysisFile);
+                            return;
+                        }
+                        final File tokensFile = new File(resultsFile);
+                        if (!tokensFile.exists() || tokensFile.length() <= 0) {
+                            LOGGER.warn(String.format(
+                                    "Tokenizer did not run successfully on %s file. Please check file contents.",
+                                    analysisFile));
+                            return;
+                        }
+
+                        final Tokens tokens = reader.read(tokensFile);
+                        for (final IFiller filler : fillers) {
+                            filler.fill(context, inputFile, tokens, writeGuard);
+                        }
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("Running analysis for %s to %s finished.", analysisFile,
+                                    resultsFile));
+                        }
+                    } catch (final Throwable e) {
+                        LOGGER.warn(String.format("Unexpected exception while running tokenizer on %s", inputFile),
+                                e);
                     }
                 });
 

@@ -21,7 +21,7 @@ public class HalsteadComplexityFiller implements IFiller {
             "StringLiteral", "HereStringExpandable", "HereStringLiteral");
 
     @Override
-    public void fill(final SensorContext context, final InputFile f, final Tokens tokens) {
+    public void fill(final SensorContext context, final InputFile f, final Tokens tokens, ContextWriteGuard writeGuard) {
         try {
             final List<String> uniqueOperands = new LinkedList<>();
             final List<String> uniqueOperators = new LinkedList<>();
@@ -47,10 +47,8 @@ public class HalsteadComplexityFiller implements IFiller {
             }
             int difficulty = (int) ((int) Math.ceil(uniqueOperators.size() / 2.0)
                     * ((totalOperands * 1.0) / uniqueOperands.size()));
-            synchronized (context) {
-                context.<Integer>newMeasure().on(f).forMetric(CoreMetrics.COGNITIVE_COMPLEXITY).withValue(difficulty)
-                        .save();
-            }
+            writeGuard.write(() -> context.<Integer>newMeasure().on(f).forMetric(CoreMetrics.COGNITIVE_COMPLEXITY).withValue(difficulty)
+                    .save());
 
         } catch (final Throwable e) {
             LOGGER.warn("Exception while saving cognitive complexity metric", e);

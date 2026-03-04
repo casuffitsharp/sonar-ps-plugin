@@ -13,4 +13,4 @@ hs_err_pid*
 
 .scannerwork
 .settings
-.vscode/settings.json
+.vscode/*

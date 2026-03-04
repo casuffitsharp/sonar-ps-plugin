@@ -32,6 +32,7 @@ public class IssuesReader {
     public List<PsIssue> read(final InputStream main) throws ParserConfigurationException, SAXException, IOException {
         final List<PsIssue> issues = new LinkedList<>();
         final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         final DocumentBuilder builder = factory.newDocumentBuilder();
         final BOMInputStream bomInputStream = BOMInputStream.builder().setInputStream(main).get();
         final Document doc = builder.parse(bomInputStream);

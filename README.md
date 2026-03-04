@@ -1,7 +1,9 @@
 # sonar-ps-plugin
 
 [![Build Status](https://dev.azure.com/casuffitsharp/sonar-ps-plugin/_apis/build/status/5?branchName=main)](https://dev.azure.com/casuffitsharp/sonar-ps-plugin/_build/latest?definitionId=5&branchName=main)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=casuffitsharp_sonar-ps-plugin&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=casuffitsharp_sonar-ps-plugin)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=casuffitsharp_sonar-ps-plugin&metric=coverage)](https://sonarcloud.io/summary/new_code?id=casuffitsharp_sonar-ps-plugin)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=casuffitsharp_sonar-ps-plugin&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=casuffitsharp_sonar-ps-plugin)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=casuffitsharp_sonar-ps-plugin&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=casuffitsharp_sonar-ps-plugin)
 [![GitHub release](https://img.shields.io/github/v/release/casuffitsharp/sonar-ps-plugin)](https://github.com/casuffitsharp/sonar-ps-plugin/releases)
 [![License](https://img.shields.io/github/license/casuffitsharp/sonar-ps-plugin)](https://github.com/casuffitsharp/sonar-ps-plugin/blob/main/LICENSE)
 

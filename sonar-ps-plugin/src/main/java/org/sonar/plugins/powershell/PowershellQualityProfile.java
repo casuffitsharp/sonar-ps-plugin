@@ -26,6 +26,7 @@ public class PowershellQualityProfile implements BuiltInQualityProfilesDefinitio
                 .getResourceAsStream(Constants.RULES_DEFINITION_FILE)) {
 
             final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             final DocumentBuilder builder = factory.newDocumentBuilder();
             final Document xmlDoc = builder.parse(rulesXml);
             final NodeList nodes = xmlDoc.getElementsByTagName("key");

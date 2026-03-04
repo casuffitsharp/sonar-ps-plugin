@@ -15,7 +15,7 @@ public class CpdFiller implements IFiller {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     @Override
-    public void fill(final SensorContext context, final InputFile f, final Tokens tokens) {
+    public void fill(final SensorContext context, final InputFile f, final Tokens tokens, ContextWriteGuard writeGuard) {
         try {
             final NewCpdTokens cpdTokens = context.newCpdTokens().onFile(f);
 
@@ -25,10 +25,7 @@ public class CpdFiller implements IFiller {
                 }
                 tryAddToken(cpdTokens, token);
             }
-            synchronized (context) {
-                cpdTokens.save();
-            }
-
+            writeGuard.write(cpdTokens::save);
         } catch (final Throwable e) {
             LOGGER.warn("Exception while saving tokens", e);
         }

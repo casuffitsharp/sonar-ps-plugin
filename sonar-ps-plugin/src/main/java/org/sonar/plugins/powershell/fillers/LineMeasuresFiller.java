@@ -21,7 +21,7 @@ public class LineMeasuresFiller implements IFiller {
     private static final int CODE = 2;
 
     @Override
-    public void fill(final SensorContext context, final InputFile f, final Tokens tokens) {
+    public void fill(final SensorContext context, final InputFile f, final Tokens tokens, ContextWriteGuard writeGuard) {
         try {
 
             final long[] lines = new long[f.lines() + 1];
@@ -55,11 +55,14 @@ public class LineMeasuresFiller implements IFiller {
                     nonCommentLineCount++;
                 }
             }
-            synchronized (context) {
-                context.<Integer>newMeasure().on(f).forMetric(CoreMetrics.COMMENT_LINES).withValue(commentLineCount)
+
+            final int finalCommentLineCount = commentLineCount;
+            final int finalNonCommentLineCount = nonCommentLineCount;
+            writeGuard.write(() -> {
+                context.<Integer>newMeasure().on(f).forMetric(CoreMetrics.COMMENT_LINES).withValue(finalCommentLineCount)
                         .save();
-                context.<Integer>newMeasure().on(f).forMetric(CoreMetrics.NCLOC).withValue(nonCommentLineCount).save();
-            }
+                context.<Integer>newMeasure().on(f).forMetric(CoreMetrics.NCLOC).withValue(finalNonCommentLineCount).save();
+            });
 
         } catch (final Throwable e) {
             LOGGER.warn("Exception while calculating comment lines ", e);

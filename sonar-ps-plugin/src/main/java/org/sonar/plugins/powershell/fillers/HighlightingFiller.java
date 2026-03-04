@@ -16,16 +16,14 @@ public class HighlightingFiller implements IFiller {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HighlightingFiller.class);
 
-    public void fill(final SensorContext context, final InputFile f, final Tokens tokens) {
-
+    @Override
+    public void fill(final SensorContext context, final InputFile f, final Tokens tokens, ContextWriteGuard writeGuard) {
         try {
             final NewHighlighting highlighting = context.newHighlighting().onFile(f);
             for (final Token token : tokens.getTokens()) {
                 highlightToken(highlighting, token);
             }
-            synchronized (context) {
-                highlighting.save();
-            }
+            writeGuard.write(highlighting::save);
         } catch (Throwable e) {
             LOGGER.warn("Exception while running highlighting", e);
         }

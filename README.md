@@ -58,7 +58,7 @@ The following options can be overridden either in SonarQube Administration or in
 
 ## Building
 
-Requirements: JDK 17+, Maven, PSScriptAnalyzer
+Requirements: JDK 21+, Maven, PSScriptAnalyzer
 
 ```bash
 # Install PSScriptAnalyzer (required for tests)

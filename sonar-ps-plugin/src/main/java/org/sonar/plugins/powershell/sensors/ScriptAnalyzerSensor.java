@@ -6,22 +6,21 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.config.Configuration;
 import org.sonar.api.utils.TempFolder;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
-import org.sonar.plugins.powershell.Constants;
 import org.sonar.plugins.powershell.fillers.IssuesFiller;
 import org.sonar.plugins.powershell.issues.PsIssue;
 import org.sonar.plugins.powershell.readers.IssuesReader;
 
-public class ScriptAnalyzerSensor extends BaseSensor implements org.sonar.api.batch.sensor.Sensor {
+public class ScriptAnalyzerSensor extends BaseSensor {
 
     private final TempFolder folder;
 
-    private static final Logger LOGGER = Loggers.get(ScriptAnalyzerSensor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScriptAnalyzerSensor.class);
 
     private final IssuesFiller issuesFiller = new IssuesFiller();
     private final IssuesReader reader = new IssuesReader();

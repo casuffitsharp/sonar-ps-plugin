@@ -7,21 +7,26 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.io.input.BOMInputStream;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.plugins.powershell.ast.Tokens;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class TokensReader {
-    private static final Logger LOGGER = Loggers.get(TokensReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TokensReader.class);
 
     public Tokens read(final File file) throws Throwable {
         final Tokens tokens = new Tokens();
         final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         final DocumentBuilder builder = factory.newDocumentBuilder();
-        final Document doc = builder.parse(new BOMInputStream(new FileInputStream(file)));
+        final Document doc;
+        try (final FileInputStream fileinputstream = new FileInputStream(file)) {
+            try (final BOMInputStream bomInputStream = BOMInputStream.builder().setInputStream(fileinputstream).get()) {
+                doc = builder.parse(bomInputStream);
+            }
+        }
         tokens.setComplexity(Integer.parseInt(doc.getDocumentElement().getAttribute("complexity")));
         final NodeList list = doc.getElementsByTagName("Token");
         for (int i = 0; i < list.getLength(); i++) {

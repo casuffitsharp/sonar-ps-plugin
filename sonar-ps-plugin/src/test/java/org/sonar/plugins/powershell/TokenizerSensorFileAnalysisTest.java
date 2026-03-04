@@ -48,7 +48,7 @@ public class TokenizerSensorFileAnalysisTest {
         } else {
             ctxTester.settings().setProperty(Constants.PS_EXECUTABLE, "pwsh");
         }
-
+        
         File baseFile = folder.newFile(key);
         FileUtils.copyURLToFile(getClass().getResource("/testFiles/test.ps1"), baseFile);
         DefaultInputFile ti = new TestInputFileBuilder(folder.getRoot().getAbsolutePath(), key)

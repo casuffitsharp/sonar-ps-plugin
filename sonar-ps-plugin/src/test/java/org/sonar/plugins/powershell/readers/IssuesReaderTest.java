@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -39,7 +40,7 @@ public class IssuesReaderTest {
         File file0 = new File(classLoader.getResource("./results/psanalyzerSingle.xml").getFile());
 
         FileUtils.copyFile(file0, file);
-        System.out.println(FileUtils.readFileToString(file));
+        System.out.println(FileUtils.readFileToString(file, StandardCharsets.UTF_8));
         List<PsIssue> issues = sut.read(file);
         Assert.assertEquals(1, issues.size());
         PsIssue issue = issues.get(0);
@@ -48,7 +49,6 @@ public class IssuesReaderTest {
         Assert.assertEquals("Message", issue.message);
         Assert.assertEquals("PSAvoidUsingPositionalParameters", issue.ruleId);
         Assert.assertEquals("Information", issue.severity);
-
     }
 
     private InputStream getFileFromResourceAsStream(String fileName) throws FileNotFoundException, URISyntaxException {
@@ -60,7 +60,5 @@ public class IssuesReaderTest {
 
             return new FileInputStream(new File(resource.toURI()));
         }
-
     }
-
 }

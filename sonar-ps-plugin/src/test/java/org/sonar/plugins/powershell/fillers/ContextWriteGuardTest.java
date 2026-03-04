@@ -18,54 +18,56 @@ public class ContextWriteGuardTest {
 
     int threads = 8;
     ExecutorService pool = Executors.newFixedThreadPool(threads);
+    try {
+      CyclicBarrier startBarrier = new CyclicBarrier(threads);
 
-    CyclicBarrier startBarrier = new CyclicBarrier(threads);
+      AtomicInteger inCritical = new AtomicInteger(0);
+      AtomicBoolean overlapDetected = new AtomicBoolean(false);
 
-    AtomicInteger inCritical = new AtomicInteger(0);
-    AtomicBoolean overlapDetected = new AtomicBoolean(false);
+      CountDownLatch firstEntered = new CountDownLatch(1);
+      CountDownLatch releaseFirst = new CountDownLatch(1);
 
-    CountDownLatch firstEntered = new CountDownLatch(1);
-    CountDownLatch releaseFirst = new CountDownLatch(1);
+      Callable<Void> task = () -> {
+        startBarrier.await(5, TimeUnit.SECONDS);
 
-    Callable<Void> task = () -> {
-      startBarrier.await(5, TimeUnit.SECONDS);
-
-      guard.write(() -> {
-        int now = inCritical.incrementAndGet();
-        if (now > 1) {
-          overlapDetected.set(true);
-        }
-
-        if (firstEntered.getCount() == 1) {
-          firstEntered.countDown();
-
-          try {
-            releaseFirst.await(5, TimeUnit.SECONDS);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        guard.write(() -> {
+          int now = inCritical.incrementAndGet();
+          if (now > 1) {
+            overlapDetected.set(true);
           }
-        }
 
-        inCritical.decrementAndGet();
-      });
+          if (firstEntered.getCount() == 1) {
+            firstEntered.countDown();
 
-      return null;
-    };
+            try {
+              releaseFirst.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
+          }
 
-    List<Future<Void>> futures = new ArrayList<>();
-    for (int i = 0; i < threads; i++)
-      futures.add(pool.submit(task));
+          inCritical.decrementAndGet();
+        });
 
-    assertTrue("No thread entered the critical section in time", firstEntered.await(5, TimeUnit.SECONDS));
+        return null;
+      };
 
-    releaseFirst.countDown();
+      List<Future<Void>> futures = new ArrayList<>();
+      for (int i = 0; i < threads; i++)
+        futures.add(pool.submit(task));
 
-    for (Future<Void> f : futures)
-      f.get(10, TimeUnit.SECONDS);
+      assertTrue("No thread entered the critical section in time", firstEntered.await(5, TimeUnit.SECONDS));
 
-    pool.shutdownNow();
+      releaseFirst.countDown();
 
-    assertFalse("Critical section executed concurrently", overlapDetected.get());
-    assertEquals("Counter should end at 0", 0, inCritical.get());
+      for (Future<Void> f : futures)
+        f.get(10, TimeUnit.SECONDS);
+
+      assertFalse("Critical section executed concurrently", overlapDetected.get());
+      assertEquals("Counter should end at 0", 0, inCritical.get());
+    } finally {
+      pool.shutdownNow();
+      pool.awaitTermination(10, TimeUnit.SECONDS);
+    }
   }
 }

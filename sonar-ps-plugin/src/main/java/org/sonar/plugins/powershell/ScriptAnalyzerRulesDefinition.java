@@ -5,16 +5,16 @@ import java.io.InputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.server.rule.RulesDefinition;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class ScriptAnalyzerRulesDefinition implements RulesDefinition {
 
-    private static final Logger LOGGER = Loggers.get(ScriptAnalyzerRulesDefinition.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScriptAnalyzerRulesDefinition.class);
 
     public void define(final Context context) {
         final String repositoryKey = Constants.REPO_KEY;

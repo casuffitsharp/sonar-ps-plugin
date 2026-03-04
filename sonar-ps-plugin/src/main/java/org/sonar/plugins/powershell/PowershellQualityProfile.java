@@ -5,15 +5,15 @@ import java.io.InputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.server.profile.BuiltInQualityProfilesDefinition;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class PowershellQualityProfile implements BuiltInQualityProfilesDefinition {
-    private static final Logger LOGGER = Loggers.get(PowershellQualityProfile.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PowershellQualityProfile.class);
 
     @Override
     public void define(final Context context) {

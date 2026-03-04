@@ -5,20 +5,20 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.issue.NewIssue;
 import org.sonar.api.batch.sensor.issue.NewIssueLocation;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.scan.filesystem.PathResolver;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
 import org.sonar.plugins.powershell.Constants;
 import org.sonar.plugins.powershell.issues.PsIssue;
 
 public class IssuesFiller {
 
-    private static final Logger LOGGER = Loggers.get(IssuesFiller.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IssuesFiller.class);
 
     public void fill(final SensorContext context, final File sourceDir, final List<PsIssue> issues) {
         final FileSystem fileSystem = context.fileSystem();

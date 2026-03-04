@@ -13,8 +13,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.plugins.powershell.issues.PsIssue;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -22,7 +22,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class IssuesReader {
-    private static final Logger LOGGER = Loggers.get(IssuesReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IssuesReader.class);
 
     public List<PsIssue> read(final File file) throws Throwable {
         final InputStream main = new FileInputStream(file);
@@ -33,7 +33,8 @@ public class IssuesReader {
         final List<PsIssue> issues = new LinkedList<>();
         final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         final DocumentBuilder builder = factory.newDocumentBuilder();
-        final Document doc = builder.parse(new BOMInputStream(main));
+        final BOMInputStream bomInputStream = BOMInputStream.builder().setInputStream(main).get();
+        final Document doc = builder.parse(bomInputStream);
         final NodeList list = doc.getElementsByTagName("Object");
         for (int i = 0; i < list.getLength(); i++) {
             final Node node = list.item(i);

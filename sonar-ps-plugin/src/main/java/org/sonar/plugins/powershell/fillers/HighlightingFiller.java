@@ -3,18 +3,18 @@ package org.sonar.plugins.powershell.fillers;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.highlighting.NewHighlighting;
 import org.sonar.api.batch.sensor.highlighting.TypeOfText;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
 import org.sonar.plugins.powershell.ast.Tokens;
 import org.sonar.plugins.powershell.ast.Tokens.Token;
 
 public class HighlightingFiller implements IFiller {
 
-    private static final Logger LOGGER = Loggers.get(HighlightingFiller.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HighlightingFiller.class);
 
     public void fill(final SensorContext context, final InputFile f, final Tokens tokens) {
 

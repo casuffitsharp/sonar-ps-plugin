@@ -10,6 +10,9 @@ permissions:
   contents: read
   pull-requests: read
 
+env:
+  JAVA_VERSION: "21"
+
 jobs:
   sonar:
     name: Build and analyze
@@ -24,10 +27,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: 'zulu'
 
       - name: Cache Sonar packages

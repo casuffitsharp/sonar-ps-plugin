@@ -3,17 +3,17 @@ package org.sonar.plugins.powershell.fillers;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.measures.CoreMetrics;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
 import org.sonar.plugins.powershell.ast.Tokens;
 import org.sonar.plugins.powershell.ast.Tokens.Token;
 
 public class LineMeasuresFiller implements IFiller {
 
-    private static final Logger LOGGER = Loggers.get(LineMeasuresFiller.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LineMeasuresFiller.class);
 
     private static final List<String> skipTypes = Arrays.asList("EndOfInput", "NewLine");
 

@@ -25,7 +25,7 @@ Open an issue with the `enhancement` label describing the feature and its motiva
 
 ## Development setup
 
-**Requirements:** JDK 17+, Maven 3.x, PowerShell with PSScriptAnalyzer
+**Requirements:** JDK 21+, Maven 3.x, PowerShell with PSScriptAnalyzer
 
 ```bash
 # Install PSScriptAnalyzer (required for tests)

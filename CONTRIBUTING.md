@@ -18,7 +18,7 @@ Open an issue with the `enhancement` label describing the feature and its motiva
 
 ### Submitting pull requests
 
-1. Fork the repository and create a branch from `master`
+1. Fork the repository and create a branch from `main`
 2. Make your changes with appropriate tests
 3. Ensure the build passes: `mvn -f sonar-ps-plugin/pom.xml verify`
 4. Submit a pull request describing the changes
@@ -29,7 +29,7 @@ Open an issue with the `enhancement` label describing the feature and its motiva
 
 ```bash
 # Install PSScriptAnalyzer (required for tests)
-pwsh -Command "Install-Module -Name PSScriptAnalyzer -Force"
+pwsh -Command "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force"
 
 # Build and run tests
 mvn -f sonar-ps-plugin/pom.xml verify

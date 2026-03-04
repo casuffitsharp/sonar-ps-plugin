@@ -11,16 +11,15 @@ public class CComplexityFiller implements IFiller {
     private static final Logger LOGGER = LoggerFactory.getLogger(CComplexityFiller.class);
 
     @Override
-    public void fill(final SensorContext context, final InputFile f, final Tokens tokens) {
+    public void fill(final SensorContext context, final InputFile f, final Tokens tokens, ContextWriteGuard writeGuard) {
         try {
-            synchronized (context) {
+            writeGuard.write(() -> 
                 context.<Integer>newMeasure().on(f).forMetric(CoreMetrics.COMPLEXITY).withValue(tokens.getComplexity())
-                        .save();
-            }
+                        .save()
+            );
         } catch (final Throwable e) {
             LOGGER.warn("Exception while saving tokens", e);
         }
 
     }
-
 }

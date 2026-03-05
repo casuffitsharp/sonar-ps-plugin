@@ -1,12 +1,11 @@
 package org.sonar.plugins.powershell.sensors;
 
 import java.io.File;
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.SystemUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.FilePredicates;
@@ -25,6 +24,7 @@ import org.sonar.plugins.powershell.fillers.HighlightingFiller;
 import org.sonar.plugins.powershell.fillers.IFiller;
 import org.sonar.plugins.powershell.fillers.LineMeasuresFiller;
 import org.sonar.plugins.powershell.readers.TokensReader;
+import org.sonar.plugins.powershell.utils.PowershellScriptExecutor;
 
 public class TokenizerSensor extends BaseSensor {
 
@@ -51,29 +51,24 @@ public class TokenizerSensor extends BaseSensor {
             LOGGER.debug("Skipping tokenizer as skip flag is set");
             return;
         }
-        final String powershellExecutable = config.get("sonar.ps.executable").orElse("powershell.exe");
 
-        final File parserFile = folder.newFile("ps", "parser.ps1");
-
-        try {
-            FileUtils.copyURLToFile(getClass().getResource("/parser.ps1"), parserFile);
-        } catch (final Throwable e1) {
-            LOGGER.warn("Exception while copying tokenizer script", e1);
-            return;
-        }
-
-        final String scriptFile = parserFile.getAbsolutePath();
         final org.sonar.api.batch.fs.FileSystem fs = context.fileSystem();
         final FilePredicates p = fs.predicates();
         final ContextWriteGuard writeGuard = new ContextWriteGuard();
+
+        final File scriptFile;
+        try {
+            scriptFile = prepareScript(folder, "/parser.ps1", "parser.ps1");
+        } catch (IOException e) {
+            LOGGER.error("Failed to prepare tokenizer script", e);
+            return;
+        }
 
         try (ExecutorService service = Executors.newWorkStealingPool()) {
             final Iterable<InputFile> inputFiles = fs.inputFiles(p.and(p.hasLanguage(PowershellLanguage.KEY)));
             for (final InputFile inputFile : inputFiles) {
 
-                final String analysisFile = SystemUtils.IS_OS_WINDOWS
-                        ? String.format("'%s'", inputFile.file().getAbsolutePath())
-                        : inputFile.file().getAbsolutePath();
+                final String analysisFile = inputFile.filename();
 
                 // skip reporting temp files
                 if (analysisFile.contains(".scannerwork")) {
@@ -84,43 +79,24 @@ public class TokenizerSensor extends BaseSensor {
                     try {
                         final String resultsFile = folder.newFile().toPath().toFile().getAbsolutePath();
 
-                        final String[] args = new String[] { powershellExecutable, scriptFile, "-inputFile",
-                                analysisFile, "-output", resultsFile };
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("Running %s command", Arrays.toString(args)));
-                        }
+                        PowershellScriptExecutor.ExecutionResult result = createExecutor(context, scriptFile)
+                                .withArgument("-inputFile")
+                                .withPathArgument(analysisFile)
+                                .withArgument("-output")
+                                .withPathArgument(resultsFile)
+                                .withTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                                .build()
+                                .execute();
 
-                        final Process process = new ProcessBuilder(args).inheritIO().start();
-
-                        boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
-                        if (!finished) {
-                            LOGGER.warn("Tokenizer timed out after {}s on {} (pid={}). Killing process.",
-                                    timeoutSeconds, analysisFile, process.pid());
-
-                            process.destroyForcibly();
-                            try {
-                                boolean terminated = process.waitFor(5, TimeUnit.SECONDS);
-                                if (!terminated) {
-                                    LOGGER.warn(
-                                            "Tokenizer process did not terminate after being destroyed (pid={})",
-                                            process.pid());
-                                }
-                            } catch (final InterruptedException ie) {
-                                Thread.currentThread().interrupt();
-                                LOGGER.warn(
-                                        "Interrupted while waiting for tokenizer process to terminate (pid={})",
-                                        process.pid(), ie);
+                        if (!result.isSuccess()) {
+                            if (result.isTimedOut()) {
+                                LOGGER.warn("Tokenizer timed out after {}s on {}.", timeoutSeconds, analysisFile);
+                            } else {
+                                LOGGER.warn("Tokenizer failed on {} with {}.", analysisFile, result);
                             }
-
                             return;
                         }
 
-                        int pReturnValue = process.exitValue();
-                        if (pReturnValue != 0) {
-                            LOGGER.warn("Tokenizer returned non-zero exit code {} on {}", pReturnValue,
-                                    analysisFile);
-                            return;
-                        }
                         final File tokensFile = new File(resultsFile);
                         if (!tokensFile.exists() || tokensFile.length() <= 0) {
                             LOGGER.warn(String.format(
@@ -151,6 +127,7 @@ public class TokenizerSensor extends BaseSensor {
                 service.shutdownNow();
             } catch (final InterruptedException e) {
                 LOGGER.warn("Unexpected error while running waiting for executor service to finish", e);
+                Thread.currentThread().interrupt();
             }
         }
     }

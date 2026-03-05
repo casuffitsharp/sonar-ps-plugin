@@ -49,9 +49,9 @@ steps:
     if ("$(PSSC_CACHE_HIT)" -ne "true") {
         Write-Host "Cache miss. Installing PSScriptAnalyzer v$(PSSCRIPTANALYZER_VERSION)..."
         if ($PSVersionTable.PSVersion.Major -lt 6) {
-            Install-PackageProvider -Name NuGet -MinimumVersion $(NUGET_MIN_VERSION) -Force -Confirm:$false -Scope CurrentUser | Out-Null
+            Install-PackageProvider -Name NuGet -MinimumVersion "$(NUGET_MIN_VERSION)" -Force -Confirm:$false -Scope CurrentUser | Out-Null
         }
-        Save-Module -Name PSScriptAnalyzer -RequiredVersion $(PSSCRIPTANALYZER_VERSION) -Path $modulePath -Force -ErrorAction Stop
+        Save-Module -Name PSScriptAnalyzer -RequiredVersion "$(PSSCRIPTANALYZER_VERSION)" -Path $modulePath -Force -ErrorAction Stop
     } else {
         Write-Host "Cache hit. PSScriptAnalyzer restored from cache."
     }

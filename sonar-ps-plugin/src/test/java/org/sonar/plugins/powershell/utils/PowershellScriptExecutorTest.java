@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Before;
@@ -86,7 +87,8 @@ public class PowershellScriptExecutorTest {
 
     assertFalse(result.isSuccess());
     assertTrue(result.isInterrupted());
-    assertTrue(Thread.interrupted()); // Verify thread interrupt status was restored
+    assertTrue(Thread.currentThread().isInterrupted()); // Verify thread interrupt status was restored
+    Thread.interrupted(); // Clear status for subsequent tests
     assertTrue(process.destroyed.get());
   }
 
@@ -106,9 +108,9 @@ public class PowershellScriptExecutorTest {
     @Override
     public OutputStream getOutputStream() { return null; }
     @Override
-    public InputStream getInputStream() { return new ByteArrayInputStream(stdOut.getBytes()); }
+    public InputStream getInputStream() { return new ByteArrayInputStream(stdOut.getBytes(StandardCharsets.UTF_8)); }
     @Override
-    public InputStream getErrorStream() { return new ByteArrayInputStream(stdErr.getBytes()); }
+    public InputStream getErrorStream() { return new ByteArrayInputStream(stdErr.getBytes(StandardCharsets.UTF_8)); }
     
     @Override
     public int waitFor() throws InterruptedException {

@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -62,6 +64,29 @@ public class PowershellScriptExecutor {
 
     LOG.debug("Executing command: {}", command);
     Process process = processStarter.start(command, inheritIO);
+
+    CompletableFuture<String> stdOutFuture = null;
+    CompletableFuture<String> stdErrFuture = null;
+
+    if (!inheritIO) {
+      // Start draining streams in background to prevent deadlock if buffers fill up
+      stdOutFuture = CompletableFuture.supplyAsync(() -> {
+        try {
+          return readStream(process.getInputStream());
+        } catch (IOException e) {
+          LOG.warn("Error reading stdout", e);
+          return "";
+        }
+      });
+      stdErrFuture = CompletableFuture.supplyAsync(() -> {
+        try {
+          return readStream(process.getErrorStream());
+        } catch (IOException e) {
+          LOG.warn("Error reading stderr", e);
+          return "";
+        }
+      });
+    }
     
     try {
       boolean finished;
@@ -75,8 +100,7 @@ public class PowershellScriptExecutor {
       if (!finished) {
         LOG.warn("PowerShell process timed out after {} {}. Killing it forcibly.", timeout, timeoutUnit);
         process.destroyForcibly();
-        // Wait briefly for the process to be terminated
-        process.waitFor(5, TimeUnit.SECONDS); 
+        waitForForcedTermination(process);
         return ExecutionResult.timeout();
       }
 
@@ -85,8 +109,8 @@ public class PowershellScriptExecutor {
       String stdErr = "";
 
       if (!inheritIO) {
-        stdOut = readStream(process.getInputStream());
-        stdErr = readStream(process.getErrorStream());
+        stdOut = stdOutFuture.join();
+        stdErr = stdErrFuture.join();
       }
 
       return new ExecutionResult(exitCode, stdOut, stdErr, false, false);
@@ -99,9 +123,18 @@ public class PowershellScriptExecutor {
     }
   }
 
+  private void waitForForcedTermination(Process process) {
+    // Wait briefly for the process to be terminated, without letting InterruptedException override the timeout result.
+    try {
+      process.waitFor(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
   private String readStream(InputStream stream) throws IOException {
     StringBuilder builder = new StringBuilder();
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         builder.append(line).append(System.lineSeparator());
@@ -143,9 +176,12 @@ public class PowershellScriptExecutor {
       return this;
     }
 
+    /**
+     * Adds an argument that represents a file path. 
+     * ProcessBuilder handles necessary quoting for spaces.
+     */
     public Builder withPathArgument(String path) {
-        this.arguments.add(path);
-        return this;
+        return withArgument(path);
     }
 
     public Builder withTimeout(long timeout, TimeUnit unit) {

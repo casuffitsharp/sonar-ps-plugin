@@ -31,7 +31,7 @@ public class ScriptAnalyzerSensor extends BaseSensor {
         try {
             final FileSystem fileSystem = context.fileSystem();
             final File baseDir = fileSystem.baseDir();
-            final String sourceDir = baseDir.toPath().toFile().getAbsolutePath();
+            final String sourceDir = baseDir.getAbsolutePath();
             final String outFile = folder.newFile().toPath().toFile().getAbsolutePath();
 
             File scriptFile = prepareScript(folder, "/scriptAnalyzer.ps1", "scriptAnalyzer.ps1");
@@ -39,28 +39,28 @@ public class ScriptAnalyzerSensor extends BaseSensor {
                     .withArgument("-inputDir")
                     .withPathArgument(sourceDir)
                     .withArgument("-output")
-                    .withPathArgument(outFile);
+                    .withPathArgument(outFile)
+                    .useInheritIO(false);
 
             LOGGER.info("Starting Script-Analyzer using powershell");
             PowershellScriptExecutor.ExecutionResult result = executorBuilder.build().execute();
 
             if (!result.isSuccess()) {
-                LOGGER.info(String.format(
-                        "Error executing Powershell Script-Analyzer analyzer. Maybe Script-Analyzer is not installed? %s",
-                        result));
+                LOGGER.info("Error executing Powershell Script-Analyzer analyzer. Maybe Script-Analyzer is not installed? {}. Details: {}",
+                        result, result.getStdErr());
                 return;
             }
 
             final File outputFile = new File(outFile);
             if (!outputFile.exists() || outputFile.length() <= 0) {
-                LOGGER.warn("Analysis was not run ok, and output file was empty at: " + outFile);
+                LOGGER.warn("Analysis was not run ok, and output file was empty at: {}", outFile);
                 return;
             }
 
             final List<PsIssue> issues = reader.read(outputFile);
             this.issuesFiller.fill(context, baseDir, issues);
 
-            LOGGER.info(String.format("Script-Analyzer finished, found %s issues at %s", issues.size(), sourceDir));
+            LOGGER.info("Script-Analyzer finished, found {} issues at {}", issues.size(), sourceDir);
 
         } catch (Throwable e) {
             LOGGER.warn("Unexpected exception while running analysis", e);

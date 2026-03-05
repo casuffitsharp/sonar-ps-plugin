@@ -32,7 +32,7 @@ public abstract class BaseSensor implements org.sonar.api.batch.sensor.Sensor {
         final boolean skipPlugin = config.getBoolean(Constants.SKIP_PLUGIN).orElse(false);
 
         if (skipPlugin) {
-            LOGGER.debug("Skipping sensor as skip plugin flag is set: " + Constants.SKIP_PLUGIN);
+            LOGGER.debug("Skipping sensor as skip plugin flag is set: {}", Constants.SKIP_PLUGIN);
             return;
         }
 
@@ -43,14 +43,21 @@ public abstract class BaseSensor implements org.sonar.api.batch.sensor.Sensor {
     protected abstract void innerExecute(final SensorContext context);
 
     protected File prepareScript(TempFolder folder, String resourcePath, String fileName) throws IOException {
+        java.net.URL resource = getClass().getResource(resourcePath);
+        if (resource == null) {
+            throw new IOException("Resource not found: " + resourcePath);
+        }
         final File scriptFile = folder.newFile("ps", fileName);
-        FileUtils.copyURLToFile(getClass().getResource(resourcePath), scriptFile);
+        FileUtils.copyURLToFile(resource, scriptFile);
         return scriptFile;
     }
 
     protected PowershellScriptExecutor.Builder createExecutor(SensorContext context, File scriptFile) {
         final Configuration config = context.config();
-        String executable = config.get("sonar.ps.executable").orElse(null);
+        String executable = config.get("sonar.ps.executable")
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse(null);
 
         PowershellScriptExecutor.Builder builder = PowershellScriptExecutor.builder()
                 .withScriptFile(scriptFile);

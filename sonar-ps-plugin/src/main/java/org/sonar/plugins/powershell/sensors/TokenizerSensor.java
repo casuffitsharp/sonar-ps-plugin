@@ -30,8 +30,6 @@ public class TokenizerSensor extends BaseSensor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TokenizerSensor.class);
 
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
-
     private final IFiller[] fillers = new IFiller[] { new LineMeasuresFiller(), new CpdFiller(),
             new HighlightingFiller(), new HalsteadComplexityFiller(), new CComplexityFiller() };
     private final TokensReader reader = new TokensReader();
@@ -68,67 +66,71 @@ public class TokenizerSensor extends BaseSensor {
             final Iterable<InputFile> inputFiles = fs.inputFiles(p.and(p.hasLanguage(PowershellLanguage.KEY)));
             for (final InputFile inputFile : inputFiles) {
 
-                final String analysisFile = inputFile.filename();
+                final String analysisFile = java.nio.file.Paths.get(inputFile.uri()).toAbsolutePath().toString();
 
                 // skip reporting temp files
                 if (analysisFile.contains(".scannerwork")) {
                     continue;
                 }
 
-                service.submit(() -> {
-                    try {
-                        final String resultsFile = folder.newFile().toPath().toFile().getAbsolutePath();
-
-                        PowershellScriptExecutor.ExecutionResult result = createExecutor(context, scriptFile)
-                                .withArgument("-inputFile")
-                                .withPathArgument(analysisFile)
-                                .withArgument("-output")
-                                .withPathArgument(resultsFile)
-                                .withTimeout(timeoutSeconds, TimeUnit.SECONDS)
-                                .build()
-                                .execute();
-
-                        if (!result.isSuccess()) {
-                            if (result.isTimedOut()) {
-                                LOGGER.warn("Tokenizer timed out after {}s on {}.", timeoutSeconds, analysisFile);
-                            } else {
-                                LOGGER.warn("Tokenizer failed on {} with {}.", analysisFile, result);
-                            }
-                            return;
-                        }
-
-                        final File tokensFile = new File(resultsFile);
-                        if (!tokensFile.exists() || tokensFile.length() <= 0) {
-                            LOGGER.warn(String.format(
-                                    "Tokenizer did not run successfully on %s file. Please check file contents.",
-                                    analysisFile));
-                            return;
-                        }
-
-                        final Tokens tokens = reader.read(tokensFile);
-                        for (final IFiller filler : fillers) {
-                            filler.fill(context, inputFile, tokens, writeGuard);
-                        }
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("Running analysis for %s to %s finished.", analysisFile,
-                                    resultsFile));
-                        }
-                    } catch (final Throwable e) {
-                        LOGGER.warn(String.format("Unexpected exception while running tokenizer on %s", inputFile),
-                                e);
-                    }
-                });
+                service.submit(() -> analyzeFile(context, inputFile, scriptFile, timeoutSeconds, writeGuard));
 
             }
-            try {
-                LOGGER.info("Waiting for file analysis to finish for " + timeoutSeconds + " seconds");
-                service.shutdown();
-                service.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
-                service.shutdownNow();
-            } catch (final InterruptedException e) {
-                LOGGER.warn("Unexpected error while running waiting for executor service to finish", e);
-                Thread.currentThread().interrupt();
+            waitForTermination(service, timeoutSeconds);
+        }
+    }
+
+    private void analyzeFile(SensorContext context, InputFile inputFile, File scriptFile, long timeoutSeconds, ContextWriteGuard writeGuard) {
+        try {
+            final String analysisFile = java.nio.file.Paths.get(inputFile.uri()).toAbsolutePath().toString();
+            final String resultsFile = folder.newFile().toPath().toFile().getAbsolutePath();
+
+            PowershellScriptExecutor.ExecutionResult result = createExecutor(context, scriptFile)
+                    .withArgument("-inputFile")
+                    .withPathArgument(analysisFile)
+                    .withArgument("-output")
+                    .withPathArgument(resultsFile)
+                    .withTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                    .build()
+                    .execute();
+
+            if (!result.isSuccess()) {
+                if (result.isTimedOut()) {
+                    LOGGER.warn("Tokenizer timed out after {}s on {}.", timeoutSeconds, analysisFile);
+                } else {
+                    LOGGER.warn("Tokenizer failed on {} with {}.", analysisFile, result);
+                }
+                return;
             }
+
+            final File tokensFile = new File(resultsFile);
+            if (!tokensFile.exists() || tokensFile.length() <= 0) {
+                LOGGER.warn("Tokenizer did not run successfully on {} file. Please check file contents.",
+                        analysisFile);
+                return;
+            }
+
+            final Tokens tokens = reader.read(tokensFile);
+            for (final IFiller filler : fillers) {
+                filler.fill(context, inputFile, tokens, writeGuard);
+            }
+            LOGGER.debug("Running analysis for {} to {} finished.", analysisFile,
+                    resultsFile);
+        } catch (final Throwable e) {
+            LOGGER.warn("Unexpected exception while running tokenizer on {}", inputFile,
+                    e);
+        }
+    }
+
+    private void waitForTermination(ExecutorService service, long timeoutSeconds) {
+        try {
+            LOGGER.info("Waiting for file analysis to finish for {} seconds", timeoutSeconds);
+            service.shutdown();
+            service.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
+            service.shutdownNow();
+        } catch (final InterruptedException e) {
+            LOGGER.warn("Unexpected error while running waiting for executor service to finish", e);
+            Thread.currentThread().interrupt();
         }
     }
 }

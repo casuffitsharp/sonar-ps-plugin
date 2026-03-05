@@ -1,17 +1,21 @@
 package org.sonar.plugins.powershell.sensors;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.SensorDescriptor;
 import org.sonar.api.config.Configuration;
+import org.sonar.api.utils.TempFolder;
 import org.sonar.plugins.powershell.Constants;
 import org.sonar.plugins.powershell.PowershellLanguage;
+import org.sonar.plugins.powershell.utils.PowershellScriptExecutor;
 
 public abstract class BaseSensor implements org.sonar.api.batch.sensor.Sensor {
 
@@ -28,7 +32,7 @@ public abstract class BaseSensor implements org.sonar.api.batch.sensor.Sensor {
         final boolean skipPlugin = config.getBoolean(Constants.SKIP_PLUGIN).orElse(false);
 
         if (skipPlugin) {
-            LOGGER.debug("Skipping sensor as skip plugin flag is set: " + Constants.SKIP_PLUGIN);
+            LOGGER.debug("Skipping sensor as skip plugin flag is set: {}", Constants.SKIP_PLUGIN);
             return;
         }
 
@@ -37,6 +41,33 @@ public abstract class BaseSensor implements org.sonar.api.batch.sensor.Sensor {
     }
 
     protected abstract void innerExecute(final SensorContext context);
+
+    protected File prepareScript(TempFolder folder, String resourcePath, String fileName) throws IOException {
+        java.net.URL resource = getClass().getResource(resourcePath);
+        if (resource == null) {
+            throw new IOException("Resource not found: " + resourcePath);
+        }
+        final File scriptFile = folder.newFile("ps", fileName);
+        FileUtils.copyURLToFile(resource, scriptFile);
+        return scriptFile;
+    }
+
+    protected PowershellScriptExecutor.Builder createExecutor(SensorContext context, File scriptFile) {
+        final Configuration config = context.config();
+        String executable = config.get("sonar.ps.executable")
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse(null);
+
+        PowershellScriptExecutor.Builder builder = PowershellScriptExecutor.builder()
+                .withScriptFile(scriptFile);
+
+        if (executable != null) {
+            builder.withExecutable(executable);
+        }
+
+        return builder;
+    }
 
     protected static String read(Process process) throws IOException {
         return "input: " + read(process.getInputStream()) + " error: " + read(process.getErrorStream());

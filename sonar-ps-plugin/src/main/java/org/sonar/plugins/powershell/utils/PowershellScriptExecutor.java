@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PowershellScriptExecutor {
   private static final Logger LOG = LoggerFactory.getLogger(PowershellScriptExecutor.class);
+  private static final int FORCED_TERMINATION_GRACE_PERIOD_SECONDS = 5;
 
   @FunctionalInterface
   public interface ProcessStarter {
@@ -69,23 +70,9 @@ public class PowershellScriptExecutor {
     CompletableFuture<String> stdErrFuture = null;
 
     if (!inheritIO) {
-      // Start draining streams in background to prevent deadlock if buffers fill up
-      stdOutFuture = CompletableFuture.supplyAsync(() -> {
-        try {
-          return readStream(process.getInputStream());
-        } catch (IOException e) {
-          LOG.warn("Error reading stdout", e);
-          return "";
-        }
-      });
-      stdErrFuture = CompletableFuture.supplyAsync(() -> {
-        try {
-          return readStream(process.getErrorStream());
-        } catch (IOException e) {
-          LOG.warn("Error reading stderr", e);
-          return "";
-        }
-      });
+      // Start draining streams in background to prevent deadlock if buffers fill up.
+      stdOutFuture = drainStream(process.getInputStream(), "stdout");
+      stdErrFuture = drainStream(process.getErrorStream(), "stderr");
     }
     
     try {
@@ -108,7 +95,7 @@ public class PowershellScriptExecutor {
       String stdOut = "";
       String stdErr = "";
 
-      if (!inheritIO) {
+      if (!inheritIO && stdOutFuture != null && stdErrFuture != null) {
         stdOut = stdOutFuture.join();
         stdErr = stdErrFuture.join();
       }
@@ -118,15 +105,31 @@ public class PowershellScriptExecutor {
     } catch (InterruptedException e) {
       LOG.warn("PowerShell process interrupted. Killing it forcibly.", e);
       process.destroyForcibly();
+      waitForForcedTermination(process);
       Thread.currentThread().interrupt();
       return ExecutionResult.interrupted();
     }
   }
 
+  private CompletableFuture<String> drainStream(InputStream stream, String name) {
+    return CompletableFuture.supplyAsync(() -> {
+      try {
+        return readStream(stream);
+      } catch (IOException e) {
+        LOG.warn("Error reading {}", name, e);
+        return "";
+      }
+    }, r -> {
+      Thread t = new Thread(r, "ps-drain-" + name);
+      t.setDaemon(true);
+      t.start();
+    });
+  }
+
   private void waitForForcedTermination(Process process) {
-    // Wait briefly for the process to be terminated, without letting InterruptedException override the timeout result.
+    // Wait briefly for the process to be terminated, without letting InterruptedException override the result.
     try {
-      process.waitFor(5, TimeUnit.SECONDS);
+      process.waitFor(FORCED_TERMINATION_GRACE_PERIOD_SECONDS, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }

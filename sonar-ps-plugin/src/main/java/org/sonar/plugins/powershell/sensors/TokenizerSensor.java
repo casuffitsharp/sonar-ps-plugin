@@ -126,10 +126,14 @@ public class TokenizerSensor extends BaseSensor {
         try {
             LOGGER.info("Waiting for file analysis to finish for {} seconds", timeoutSeconds);
             service.shutdown();
-            service.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
-            service.shutdownNow();
+            boolean terminated = service.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
+            if (!terminated) {
+                LOGGER.warn("Executor service did not terminate within {} seconds, forcing shutdownNow()", timeoutSeconds);
+                service.shutdownNow();
+            }
         } catch (final InterruptedException e) {
-            LOGGER.warn("Unexpected error while running waiting for executor service to finish", e);
+            LOGGER.warn("Unexpected error while waiting for executor service to finish", e);
+            service.shutdownNow();
             Thread.currentThread().interrupt();
         }
     }

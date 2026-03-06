@@ -1,7 +1,6 @@
 package org.sonar.plugins.powershell.fillers;
 
 import java.io.File;
-import java.util.LinkedList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +26,9 @@ public class IssuesFiller {
   public void fill(final SensorContext context, final File sourceDir, final List<PsIssue> issues) {
     final FileSystem fileSystem = context.fileSystem();
     final String[] skipRulesArray = config.getExternalRulesSkipList();
-    final List<String> skipRules = new LinkedList<>();
+    final java.util.Set<String> skipRules = new java.util.HashSet<>();
     for (String s : skipRulesArray) {
-      skipRules.add(s.toLowerCase());
+      skipRules.add(s.toLowerCase().trim());
     }
     for (final PsIssue issue : issues) {
       try {

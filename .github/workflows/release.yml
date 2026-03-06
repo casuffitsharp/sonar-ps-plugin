@@ -34,7 +34,7 @@ jobs:
 
       - name: Cache PSScriptAnalyzer
         id: cache-pssa
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ github.workspace }}/.pssa_module
           key: pssa-${{ env.PSSCRIPTANALYZER_VERSION }}-${{ runner.os }}

@@ -69,13 +69,20 @@ public class PowershellScriptExecutor {
 
     CompletableFuture<String> stdOutFuture = null;
     CompletableFuture<String> stdErrFuture = null;
-    final ExecutorService drainExecutor = Executors.newVirtualThreadPerTaskExecutor();
+    ExecutorService drainExecutor = null;
 
     try {
       if (!inheritIO) {
+        // We manually manage the executor lifecycle instead of try-with-resources because
+        // in Java 21, ExecutorService.close() (called by try-with-resources) blocks indefinitely.
+        // We want to ensure we respect our own timeout logic.
+        @SuppressWarnings("java:S2095")
+        final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+        drainExecutor = executor;
+
         // Start draining streams in background using virtual threads.
-        stdOutFuture = drainStream(process.getInputStream(), "stdout", drainExecutor);
-        stdErrFuture = drainStream(process.getErrorStream(), "stderr", drainExecutor);
+        stdOutFuture = drainStream(process.getInputStream(), "stdout", executor);
+        stdErrFuture = drainStream(process.getErrorStream(), "stderr", executor);
       }
 
       try {
@@ -115,15 +122,17 @@ public class PowershellScriptExecutor {
         return ExecutionResult.interrupted();
       }
     } finally {
-      drainExecutor.shutdown();
-      try {
-        if (!drainExecutor.awaitTermination(
-            FORCED_TERMINATION_GRACE_PERIOD_SECONDS, TimeUnit.SECONDS)) {
+      if (drainExecutor != null) {
+        drainExecutor.shutdown();
+        try {
+          if (!drainExecutor.awaitTermination(
+              FORCED_TERMINATION_GRACE_PERIOD_SECONDS, TimeUnit.SECONDS)) {
+            drainExecutor.shutdownNow();
+          }
+        } catch (InterruptedException e) {
           drainExecutor.shutdownNow();
+          Thread.currentThread().interrupt();
         }
-      } catch (InterruptedException e) {
-        drainExecutor.shutdownNow();
-        Thread.currentThread().interrupt();
       }
     }
   }

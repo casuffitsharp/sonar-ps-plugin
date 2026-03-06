@@ -20,7 +20,19 @@ public class PluginConfiguration {
   }
 
   public long getTokenizerTimeout() {
-    return config.get(Constants.TIMEOUT_TOKENIZER).map(Long::parseLong).orElse(3600L);
+    return config
+        .get(Constants.TIMEOUT_TOKENIZER)
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .map(
+            value -> {
+              try {
+                return Long.parseLong(value);
+              } catch (NumberFormatException e) {
+                return 3600L;
+              }
+            })
+        .orElse(3600L);
   }
 
   public String[] getFileSuffixes(String[] defaultSuffixes) {

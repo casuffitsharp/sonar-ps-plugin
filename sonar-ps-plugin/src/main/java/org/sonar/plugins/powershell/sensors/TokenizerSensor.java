@@ -79,7 +79,9 @@ public class TokenizerSensor extends BaseSensor {
         }
 
         service.submit(
-            () -> analyzeFile(context, inputFile, scriptFile, timeoutSeconds, writeGuard));
+            () ->
+                analyzeFile(
+                    context, inputFile, analysisFile, scriptFile, timeoutSeconds, writeGuard));
       }
       waitForTermination(service, timeoutSeconds);
     } finally {
@@ -92,12 +94,11 @@ public class TokenizerSensor extends BaseSensor {
   private void analyzeFile(
       SensorContext context,
       InputFile inputFile,
+      String analysisFile,
       File scriptFile,
       long timeoutSeconds,
       ContextWriteGuard writeGuard) {
     try {
-      final String analysisFile =
-          java.nio.file.Paths.get(inputFile.uri()).toAbsolutePath().toString();
       final String resultsFile = folder.newFile().toPath().toFile().getAbsolutePath();
 
       PowershellScriptExecutor.ExecutionResult result =

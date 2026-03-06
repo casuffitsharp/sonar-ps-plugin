@@ -41,11 +41,12 @@ public class PowershellScriptExecutorTest {
     process.stdOut = "output";
     process.stdErr = "error";
 
-    PowershellScriptExecutor executor = PowershellScriptExecutor.builder()
-        .withProcessStarter(processStarter)
-        .withScriptFile(tempScript)
-        .useInheritIO(false)
-        .build();
+    PowershellScriptExecutor executor =
+        PowershellScriptExecutor.builder()
+            .withProcessStarter(processStarter)
+            .withScriptFile(tempScript)
+            .useInheritIO(false)
+            .build();
 
     PowershellScriptExecutor.ExecutionResult result = executor.execute();
 
@@ -61,11 +62,12 @@ public class PowershellScriptExecutorTest {
   public void shouldHandleTimeout() throws Exception {
     process.waitForResult = false;
 
-    PowershellScriptExecutor executor = PowershellScriptExecutor.builder()
-        .withProcessStarter(processStarter)
-        .withScriptFile(tempScript)
-        .withTimeout(1, TimeUnit.SECONDS)
-        .build();
+    PowershellScriptExecutor executor =
+        PowershellScriptExecutor.builder()
+            .withProcessStarter(processStarter)
+            .withScriptFile(tempScript)
+            .withTimeout(1, TimeUnit.SECONDS)
+            .build();
 
     PowershellScriptExecutor.ExecutionResult result = executor.execute();
 
@@ -78,16 +80,18 @@ public class PowershellScriptExecutorTest {
   public void shouldHandleInterruption() throws Exception {
     process.shouldThrowInterruptedException = true;
 
-    PowershellScriptExecutor executor = PowershellScriptExecutor.builder()
-        .withProcessStarter(processStarter)
-        .withScriptFile(tempScript)
-        .build();
+    PowershellScriptExecutor executor =
+        PowershellScriptExecutor.builder()
+            .withProcessStarter(processStarter)
+            .withScriptFile(tempScript)
+            .build();
 
     PowershellScriptExecutor.ExecutionResult result = executor.execute();
 
     assertFalse(result.isSuccess());
     assertTrue(result.isInterrupted());
-    assertTrue(Thread.currentThread().isInterrupted()); // Verify thread interrupt status was restored
+    assertTrue(
+        Thread.currentThread().isInterrupted()); // Verify thread interrupt status was restored
     Thread.interrupted(); // Clear status for subsequent tests
     assertTrue(process.destroyed.get());
   }
@@ -98,6 +102,7 @@ public class PowershellScriptExecutorTest {
   }
 
   private static class TestProcess extends Process {
+
     int exitValue = 0;
     String stdOut = "";
     String stdErr = "";
@@ -106,12 +111,20 @@ public class PowershellScriptExecutorTest {
     AtomicBoolean destroyed = new AtomicBoolean(false);
 
     @Override
-    public OutputStream getOutputStream() { return null; }
+    public OutputStream getOutputStream() {
+      return null;
+    }
+
     @Override
-    public InputStream getInputStream() { return new ByteArrayInputStream(stdOut.getBytes(StandardCharsets.UTF_8)); }
+    public InputStream getInputStream() {
+      return new ByteArrayInputStream(stdOut.getBytes(StandardCharsets.UTF_8));
+    }
+
     @Override
-    public InputStream getErrorStream() { return new ByteArrayInputStream(stdErr.getBytes(StandardCharsets.UTF_8)); }
-    
+    public InputStream getErrorStream() {
+      return new ByteArrayInputStream(stdErr.getBytes(StandardCharsets.UTF_8));
+    }
+
     @Override
     public int waitFor() throws InterruptedException {
       if (shouldThrowInterruptedException) throw new InterruptedException();
@@ -120,19 +133,24 @@ public class PowershellScriptExecutorTest {
 
     @Override
     public boolean waitFor(long timeout, TimeUnit unit) throws InterruptedException {
-        if (shouldThrowInterruptedException) throw new InterruptedException();
-        return waitForResult;
+      if (shouldThrowInterruptedException) throw new InterruptedException();
+      return waitForResult;
     }
 
     @Override
-    public int exitValue() { return exitValue; }
+    public int exitValue() {
+      return exitValue;
+    }
+
     @Override
-    public void destroy() { destroyed.set(true); }
-    
+    public void destroy() {
+      destroyed.set(true);
+    }
+
     @Override
     public Process destroyForcibly() {
-        destroyed.set(true);
-        return this;
+      destroyed.set(true);
+      return this;
     }
   }
 }

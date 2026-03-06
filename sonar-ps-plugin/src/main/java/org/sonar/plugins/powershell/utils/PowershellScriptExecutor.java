@@ -10,16 +10,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Helper class to execute PowerShell scripts with a fluent Builder API.
- */
+/** Helper class to execute PowerShell scripts with a fluent Builder API. */
 public class PowershellScriptExecutor {
+
   private static final Logger LOG = LoggerFactory.getLogger(PowershellScriptExecutor.class);
   private static final int FORCED_TERMINATION_GRACE_PERIOD_SECONDS = 5;
 
@@ -28,13 +28,14 @@ public class PowershellScriptExecutor {
     Process start(List<String> command, boolean inheritIO) throws IOException;
   }
 
-  private static final ProcessStarter DEFAULT_STARTER = (cmd, inherit) -> {
-    ProcessBuilder pb = new ProcessBuilder(cmd);
-    if (inherit) {
-      pb.inheritIO();
-    }
-    return pb.start();
-  };
+  private static final ProcessStarter DEFAULT_STARTER =
+      (cmd, inherit) -> {
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        if (inherit) {
+          pb.inheritIO();
+        }
+        return pb.start();
+      };
 
   private final String executable;
   private final File scriptFile;
@@ -68,76 +69,132 @@ public class PowershellScriptExecutor {
 
     CompletableFuture<String> stdOutFuture = null;
     CompletableFuture<String> stdErrFuture = null;
+    ExecutorService drainExecutor = null;
 
-    if (!inheritIO) {
-      // Start draining streams in background to prevent deadlock if buffers fill up.
-      stdOutFuture = drainStream(process.getInputStream(), "stdout");
-      stdErrFuture = drainStream(process.getErrorStream(), "stderr");
-    }
-    
     try {
-      boolean finished;
-      if (timeout > 0) {
-        finished = process.waitFor(timeout, timeoutUnit);
-      } else {
-        process.waitFor();
-        finished = true;
+      if (!inheritIO) {
+        // We manually manage the executor lifecycle instead of try-with-resources because
+        // in Java 21, ExecutorService.close() (called by try-with-resources) blocks indefinitely.
+        // We want to ensure we respect our own timeout logic.
+        @SuppressWarnings("java:S2095")
+        final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+        drainExecutor = executor;
+
+        // Start draining streams in background using virtual threads.
+        stdOutFuture = drainStream(process.getInputStream(), "stdout", executor);
+        stdErrFuture = drainStream(process.getErrorStream(), "stderr", executor);
       }
 
-      if (!finished) {
-        LOG.warn("PowerShell process timed out after {} {}. Killing it forcibly.", timeout, timeoutUnit);
+      try {
+        boolean finished;
+        if (timeout > 0) {
+          finished = process.waitFor(timeout, timeoutUnit);
+        } else {
+          process.waitFor();
+          finished = true;
+        }
+
+        if (!finished) {
+          LOG.warn(
+              "PowerShell process timed out after {} {}. Killing it forcibly.",
+              timeout,
+              timeoutUnit);
+          process.destroyForcibly();
+          cleanupAfterForcedTermination(process, stdOutFuture, stdErrFuture);
+          return ExecutionResult.timeout();
+        }
+
+        int exitCode = process.exitValue();
+        String stdOut = "";
+        String stdErr = "";
+
+        if (!inheritIO && stdOutFuture != null && stdErrFuture != null) {
+          stdOut = stdOutFuture.join();
+          stdErr = stdErrFuture.join();
+        }
+
+        return new ExecutionResult(exitCode, stdOut, stdErr, false, false);
+      } catch (InterruptedException e) {
+        LOG.warn("PowerShell process interrupted. Killing it forcibly.", e);
         process.destroyForcibly();
-        waitForForcedTermination(process);
-        return ExecutionResult.timeout();
+        cleanupAfterForcedTermination(process, stdOutFuture, stdErrFuture);
+        Thread.currentThread().interrupt();
+        return ExecutionResult.interrupted();
       }
-
-      int exitCode = process.exitValue();
-      String stdOut = "";
-      String stdErr = "";
-
-      if (!inheritIO && stdOutFuture != null && stdErrFuture != null) {
-        stdOut = stdOutFuture.join();
-        stdErr = stdErrFuture.join();
+    } finally {
+      if (drainExecutor != null) {
+        drainExecutor.shutdown();
+        try {
+          if (!drainExecutor.awaitTermination(
+              FORCED_TERMINATION_GRACE_PERIOD_SECONDS, TimeUnit.SECONDS)) {
+            drainExecutor.shutdownNow();
+          }
+        } catch (InterruptedException e) {
+          drainExecutor.shutdownNow();
+          Thread.currentThread().interrupt();
+        }
       }
-
-      return new ExecutionResult(exitCode, stdOut, stdErr, false, false);
-
-    } catch (InterruptedException e) {
-      LOG.warn("PowerShell process interrupted. Killing it forcibly.", e);
-      process.destroyForcibly();
-      waitForForcedTermination(process);
-      Thread.currentThread().interrupt();
-      return ExecutionResult.interrupted();
     }
   }
 
-  private CompletableFuture<String> drainStream(InputStream stream, String name) {
-    return CompletableFuture.supplyAsync(() -> {
-      try {
-        return readStream(stream);
-      } catch (IOException e) {
-        LOG.warn("Error reading {}", name, e);
-        return "";
-      }
-    }, r -> {
-      Thread t = new Thread(r, "ps-drain-" + name);
-      t.setDaemon(true);
-      t.start();
-    });
+  private CompletableFuture<String> drainStream(
+      InputStream stream, String name, ExecutorService executor) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            return readStream(stream);
+          } catch (IOException e) {
+            LOG.warn("Error reading {}", name, e);
+            return "";
+          }
+        },
+        executor);
   }
 
-  private void waitForForcedTermination(Process process) {
-    // Wait briefly for the process to be terminated, without letting InterruptedException override the result.
+  private void cleanupAfterForcedTermination(
+      Process process,
+      CompletableFuture<String> stdOutFuture,
+      CompletableFuture<String> stdErrFuture) {
     try {
       process.waitFor(FORCED_TERMINATION_GRACE_PERIOD_SECONDS, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
+
+    if (!inheritIO) {
+      closeQuietly(process.getInputStream());
+      closeQuietly(process.getErrorStream());
+      closeQuietly(process.getOutputStream());
+
+      if (stdOutFuture != null) {
+        stdOutFuture.cancel(true);
+      }
+      if (stdErrFuture != null) {
+        stdErrFuture.cancel(true);
+      }
+    }
+  }
+
+  private void closeQuietly(InputStream stream) {
+    try {
+      stream.close();
+    } catch (IOException e) {
+      LOG.debug("Failed to close stream quietly", e);
+    }
+  }
+
+  private void closeQuietly(java.io.OutputStream stream) {
+    try {
+      stream.close();
+    } catch (IOException e) {
+      LOG.debug("Failed to close stream quietly", e);
+    }
   }
 
   private String readStream(InputStream stream) throws IOException {
     StringBuilder builder = new StringBuilder();
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         builder.append(line).append(System.lineSeparator());
@@ -151,6 +208,7 @@ public class PowershellScriptExecutor {
   }
 
   public static class Builder {
+
     private String executable = SystemUtils.IS_OS_WINDOWS ? "powershell.exe" : "pwsh";
     private File scriptFile;
     private final List<String> arguments = new ArrayList<>();
@@ -180,11 +238,11 @@ public class PowershellScriptExecutor {
     }
 
     /**
-     * Adds an argument that represents a file path. 
-     * ProcessBuilder handles necessary quoting for spaces.
+     * Adds an argument that represents a file path. ProcessBuilder handles necessary quoting for
+     * spaces.
      */
     public Builder withPathArgument(String path) {
-        return withArgument(path);
+      return withArgument(path);
     }
 
     public Builder withTimeout(long timeout, TimeUnit unit) {
@@ -212,17 +270,17 @@ public class PowershellScriptExecutor {
     }
   }
 
-  /**
-   * Result of the PowerShell execution.
-   */
+  /** Result of the PowerShell execution. */
   public static class ExecutionResult {
+
     private final int exitCode;
     private final String stdOut;
     private final String stdErr;
     private final boolean timedOut;
     private final boolean interrupted;
 
-    private ExecutionResult(int exitCode, String stdOut, String stdErr, boolean timedOut, boolean interrupted) {
+    private ExecutionResult(
+        int exitCode, String stdOut, String stdErr, boolean timedOut, boolean interrupted) {
       this.exitCode = exitCode;
       this.stdOut = stdOut;
       this.stdErr = stdErr;
@@ -238,16 +296,34 @@ public class PowershellScriptExecutor {
       return new ExecutionResult(-1, "", "", false, true);
     }
 
-    public int getExitCode() { return exitCode; }
-    public String getStdOut() { return stdOut; }
-    public String getStdErr() { return stdErr; }
-    public boolean isTimedOut() { return timedOut; }
-    public boolean isInterrupted() { return interrupted; }
-    public boolean isSuccess() { return !timedOut && !interrupted && exitCode == 0; }
-    
+    public int getExitCode() {
+      return exitCode;
+    }
+
+    public String getStdOut() {
+      return stdOut;
+    }
+
+    public String getStdErr() {
+      return stdErr;
+    }
+
+    public boolean isTimedOut() {
+      return timedOut;
+    }
+
+    public boolean isInterrupted() {
+      return interrupted;
+    }
+
+    public boolean isSuccess() {
+      return !timedOut && !interrupted && exitCode == 0;
+    }
+
     @Override
     public String toString() {
-        return String.format("ExitCode: %d, TimedOut: %b, Interrupted: %b", exitCode, timedOut, interrupted);
+      return String.format(
+          "ExitCode: %d, TimedOut: %b, Interrupted: %b", exitCode, timedOut, interrupted);
     }
   }
 }

@@ -115,7 +115,7 @@ public class PowershellScriptExecutor {
 
         return new ExecutionResult(exitCode, stdOut, stdErr, false, false);
       } catch (InterruptedException e) {
-        LOG.warn("PowerShell process interrupted. Killing it forcibly.", e);
+        LOG.warn("PowerShell process interrupted. Killing it forcibly.");
         process.destroyForcibly();
         cleanupAfterForcedTermination(process, stdOutFuture, stdErrFuture);
         Thread.currentThread().interrupt();

@@ -10,6 +10,7 @@ import org.sonar.api.batch.sensor.highlighting.NewHighlighting;
 import org.sonar.api.batch.sensor.highlighting.TypeOfText;
 import org.sonar.plugins.powershell.ast.Tokens;
 import org.sonar.plugins.powershell.ast.Tokens.Token;
+import org.sonar.plugins.powershell.utils.ContextWriteGuard;
 
 public class HighlightingFiller implements IFiller {
 

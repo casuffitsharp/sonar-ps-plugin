@@ -6,10 +6,11 @@ import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.plugins.powershell.ast.Tokens;
+import org.sonar.plugins.powershell.utils.ContextWriteGuard;
 
-public class CComplexityFiller implements IFiller {
+public class CyclomaticComplexityFiller implements IFiller {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(CComplexityFiller.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CyclomaticComplexityFiller.class);
 
   @Override
   public void fill(

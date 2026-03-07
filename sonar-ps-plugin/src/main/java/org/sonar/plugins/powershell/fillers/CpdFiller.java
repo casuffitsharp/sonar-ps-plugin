@@ -8,6 +8,7 @@ import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.cpd.NewCpdTokens;
 import org.sonar.plugins.powershell.ast.Tokens;
 import org.sonar.plugins.powershell.ast.Tokens.Token;
+import org.sonar.plugins.powershell.utils.ContextWriteGuard;
 
 public class CpdFiller implements IFiller {
 

@@ -86,9 +86,6 @@ foreach ($node in $incrementingNodes) {
         if ($elseIfCount -gt 0) {
             $cognitiveComplexity += $elseIfCount
         }
-        if ($null -ne $node.ElseClause) {
-            $cognitiveComplexity += 1
-        }
     } elseif ($node -is [System.Management.Automation.Language.CatchClauseAst]) {
         $nesting = Get-NestingLevel $node
         $cognitiveComplexity += 1 + $nesting

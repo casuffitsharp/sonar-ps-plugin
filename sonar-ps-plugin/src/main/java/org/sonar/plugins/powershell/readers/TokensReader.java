@@ -34,6 +34,10 @@ public class TokensReader {
       }
     }
     tokens.setComplexity(Integer.parseInt(doc.getDocumentElement().getAttribute("complexity")));
+    String cognitiveComplexityStr = doc.getDocumentElement().getAttribute("cognitiveComplexity");
+    if (cognitiveComplexityStr != null && !cognitiveComplexityStr.isEmpty()) {
+      tokens.setCognitiveComplexity(Integer.parseInt(cognitiveComplexityStr));
+    }
     final NodeList list = doc.getElementsByTagName("Token");
     for (int i = 0; i < list.getLength(); i++) {
       try {

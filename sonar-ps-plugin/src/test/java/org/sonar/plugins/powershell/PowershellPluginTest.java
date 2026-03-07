@@ -19,6 +19,6 @@ public class PowershellPluginTest {
 
     // Verify that some extensions were added
     verify(context, atLeastOnce()).addExtension(any());
-    verify(context, atLeastOnce()).addExtensions(any(), any(), any(), any());
+    verify(context, atLeastOnce()).addExtensions(any(), any(), any(), any(), any());
   }
 }

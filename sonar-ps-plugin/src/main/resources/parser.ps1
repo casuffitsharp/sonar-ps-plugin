@@ -45,6 +45,73 @@ $xmlWriter.WriteStartDocument();
 $xmlWriter.WriteStartElement("Tokens");
 $xmlWriter.WriteAttributeString("complexity", $complexity);
 
+function Get-NestingLevel {
+    param([System.Management.Automation.Language.Ast]$Node)
+    $level = 0
+    $parent = $Node.Parent
+    while ($null -ne $parent) {
+        if ($parent -is [System.Management.Automation.Language.IfStatementAst] -or
+            $parent -is [System.Management.Automation.Language.SwitchStatementAst] -or
+            $parent -is [System.Management.Automation.Language.ForStatementAst] -or
+            $parent -is [System.Management.Automation.Language.ForEachStatementAst] -or
+            $parent -is [System.Management.Automation.Language.WhileStatementAst] -or
+            $parent -is [System.Management.Automation.Language.DoWhileStatementAst] -or
+            $parent -is [System.Management.Automation.Language.DoUntilStatementAst] -or
+            $parent -is [System.Management.Automation.Language.CatchClauseAst]) {
+            $level++
+        }
+        $parent = $parent.Parent
+    }
+    return $level
+}
+
+$cognitiveComplexity = 0
+
+$incrementingNodes = $ast.FindAll({
+    $args[0] -is [System.Management.Automation.Language.IfStatementAst] -or
+    $args[0] -is [System.Management.Automation.Language.SwitchStatementAst] -or
+    $args[0] -is [System.Management.Automation.Language.ForStatementAst] -or
+    $args[0] -is [System.Management.Automation.Language.ForEachStatementAst] -or
+    $args[0] -is [System.Management.Automation.Language.WhileStatementAst] -or
+    $args[0] -is [System.Management.Automation.Language.DoWhileStatementAst] -or
+    $args[0] -is [System.Management.Automation.Language.DoUntilStatementAst] -or
+    $args[0] -is [System.Management.Automation.Language.CatchClauseAst]
+}, $true)
+
+foreach ($node in $incrementingNodes) {
+    if ($node -is [System.Management.Automation.Language.IfStatementAst]) {
+        $nesting = Get-NestingLevel $node
+        $cognitiveComplexity += 1 + $nesting
+        $elseIfCount = $node.Clauses.Count - 1
+        if ($elseIfCount -gt 0) {
+            $cognitiveComplexity += $elseIfCount
+        }
+        if ($null -ne $node.ElseClause) {
+            $cognitiveComplexity += 1
+        }
+    } elseif ($node -is [System.Management.Automation.Language.CatchClauseAst]) {
+        $nesting = Get-NestingLevel $node
+        $cognitiveComplexity += 1 + $nesting
+    } else {
+        $nesting = Get-NestingLevel $node
+        $cognitiveComplexity += 1 + $nesting
+    }
+}
+
+$binaryExpressions = $ast.FindAll({$args[0] -is [System.Management.Automation.Language.BinaryExpressionAst]}, $true)
+foreach ($expr in $binaryExpressions) {
+    if ($expr.Operator -in 'And', 'Or', 'Xor') {
+        $parent = $expr.Parent
+        if ($parent -is [System.Management.Automation.Language.BinaryExpressionAst] -and $parent.Operator -eq $expr.Operator) {
+            # part of sequence
+        } else {
+            $cognitiveComplexity += 1
+        }
+    }
+}
+
+$xmlWriter.WriteAttributeString("cognitiveComplexity", $cognitiveComplexity);
+
 Foreach ($item in $tokens) {	
 	$xmlWriter.WriteStartElement("Token");
 	$xmlWriter.WriteElementString("Text", $item.Text);

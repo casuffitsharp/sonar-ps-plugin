@@ -14,14 +14,15 @@ import org.sonar.api.utils.TempFolder;
 import org.sonar.plugins.powershell.PluginConfiguration;
 import org.sonar.plugins.powershell.PowershellLanguage;
 import org.sonar.plugins.powershell.ast.Tokens;
-import org.sonar.plugins.powershell.fillers.CComplexityFiller;
-import org.sonar.plugins.powershell.fillers.ContextWriteGuard;
+import org.sonar.plugins.powershell.fillers.CognitiveComplexityFiller;
 import org.sonar.plugins.powershell.fillers.CpdFiller;
+import org.sonar.plugins.powershell.fillers.CyclomaticComplexityFiller;
 import org.sonar.plugins.powershell.fillers.HalsteadComplexityFiller;
 import org.sonar.plugins.powershell.fillers.HighlightingFiller;
 import org.sonar.plugins.powershell.fillers.IFiller;
 import org.sonar.plugins.powershell.fillers.LineMeasuresFiller;
 import org.sonar.plugins.powershell.readers.TokensReader;
+import org.sonar.plugins.powershell.utils.ContextWriteGuard;
 import org.sonar.plugins.powershell.utils.PowershellScriptExecutor;
 
 public class TokenizerSensor extends BaseSensor {
@@ -34,7 +35,8 @@ public class TokenizerSensor extends BaseSensor {
         new CpdFiller(),
         new HighlightingFiller(),
         new HalsteadComplexityFiller(),
-        new CComplexityFiller()
+        new CyclomaticComplexityFiller(),
+        new CognitiveComplexityFiller()
       };
   private final TokensReader reader = new TokensReader();
   private final TempFolder folder;

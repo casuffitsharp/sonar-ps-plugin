@@ -16,8 +16,16 @@ Repository for Powershell language plugin for SonarQube.
 Currently the plugin supports:
 
 - Reporting of issues found by [PSScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer)
-- Cyclomatic and cognitive complexity metrics
+- Cyclomatic, Cognitive, and Halstead complexity metrics
 - Reporting number of lines of code and comment lines metrics
+
+## Complexity Metrics
+
+This plugin calculates several complexity metrics for PowerShell scripts:
+
+- **Cyclomatic Complexity**: Measures the number of linearly independent paths through a program's source code.
+- **Cognitive Complexity**: A measure of how hard the control flow of a function is to understand. It increments for conditionals (`if`, `switch`), loops (`for`, `foreach`, `while`), `catch` blocks, and logical operators (`-and`, `-or`, `-xor`). It also adds a nesting penalty for nested structures.
+- **Halstead Metrics**: Measures structural complexity based on the number of operators and operands. It includes custom metrics for **Halstead Difficulty**, **Halstead Volume**, and **Halstead Effort**.
 
 ## Usage
 

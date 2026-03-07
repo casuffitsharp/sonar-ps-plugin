@@ -7,9 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
-import org.sonar.api.measures.CoreMetrics;
 import org.sonar.plugins.powershell.ast.Tokens;
 import org.sonar.plugins.powershell.ast.Tokens.Token;
+import org.sonar.plugins.powershell.metrics.PowershellMetrics;
+import org.sonar.plugins.powershell.utils.ContextWriteGuard;
 
 public class HalsteadComplexityFiller implements IFiller {
 
@@ -66,12 +67,12 @@ public class HalsteadComplexityFiller implements IFiller {
               context
                   .<Integer>newMeasure()
                   .on(f)
-                  .forMetric(CoreMetrics.COGNITIVE_COMPLEXITY)
+                  .forMetric(PowershellMetrics.HALSTEAD_DIFFICULTY)
                   .withValue(difficulty)
                   .save());
 
     } catch (final Exception e) {
-      LOGGER.warn("Exception while saving cognitive complexity metric", e);
+      LOGGER.warn("Exception while saving halstead difficulty metric", e);
     }
   }
 }

@@ -61,7 +61,13 @@ public class TokenizerSensorFileAnalysisTest {
     sut.execute(ctxTester);
 
     Assert.assertEquals(18, ctxTester.cpdTokens(ti.key()).size());
-    Assert.assertEquals(4, ctxTester.measures(ti.key()).size());
+    Assert.assertEquals(5, ctxTester.measures(ti.key()).size());
+    Assert.assertEquals(
+        1,
+        ctxTester
+            .measure(ti.key(), org.sonar.api.measures.CoreMetrics.COGNITIVE_COMPLEXITY)
+            .value()
+            .intValue());
     Assert.assertEquals(1, ctxTester.highlightingTypeAt(ti.key(), 1, 30).size());
   }
 

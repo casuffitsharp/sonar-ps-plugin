@@ -10,8 +10,9 @@ import org.junit.Test;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.measure.NewMeasure;
-import org.sonar.api.measures.CoreMetrics;
 import org.sonar.plugins.powershell.ast.Tokens;
+import org.sonar.plugins.powershell.metrics.PowershellMetrics;
+import org.sonar.plugins.powershell.utils.ContextWriteGuard;
 
 public class HalsteadComplexityFillerTest {
 
@@ -48,7 +49,7 @@ public class HalsteadComplexityFillerTest {
 
     sut.fill(context, inputFile, tokens, writeGuard);
 
-    verify(measure).forMetric(CoreMetrics.COGNITIVE_COMPLEXITY);
+    verify(measure).forMetric(PowershellMetrics.HALSTEAD_DIFFICULTY);
     // n1 = 2 (unique operators: +, -)
     // n2 = 2 (unique operands: $var, 'string')
     // N2 = 2 (total operands)

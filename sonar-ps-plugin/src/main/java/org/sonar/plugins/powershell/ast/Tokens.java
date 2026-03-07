@@ -6,6 +6,7 @@ import java.util.List;
 public class Tokens {
 
   private int complexity;
+  private int cognitiveComplexity;
 
   private final List<Token> tokenList = new LinkedList<>();
 
@@ -19,6 +20,14 @@ public class Tokens {
 
   public int getComplexity() {
     return complexity;
+  }
+
+  public void setCognitiveComplexity(int cognitiveComplexity) {
+    this.cognitiveComplexity = cognitiveComplexity;
+  }
+
+  public int getCognitiveComplexity() {
+    return cognitiveComplexity;
   }
 
   public record Token(

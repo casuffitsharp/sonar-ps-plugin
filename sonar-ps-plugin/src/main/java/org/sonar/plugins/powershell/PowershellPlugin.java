@@ -5,6 +5,7 @@ import org.sonar.api.Properties;
 import org.sonar.api.PropertyType;
 import org.sonar.api.config.PropertyDefinition;
 import org.sonar.plugins.powershell.fillers.IssuesFiller;
+import org.sonar.plugins.powershell.metrics.PowershellMetrics;
 import org.sonar.plugins.powershell.sensors.ScriptAnalyzerSensor;
 import org.sonar.plugins.powershell.sensors.TokenizerSensor;
 
@@ -60,7 +61,8 @@ public class PowershellPlugin implements Plugin {
         PowershellLanguage.class,
         ScriptAnalyzerRulesDefinition.class,
         PluginConfiguration.class,
-        IssuesFiller.class);
+        IssuesFiller.class,
+        PowershellMetrics.class);
     context.addExtensions(PowershellQualityProfile.class, ScriptAnalyzerSensor.class);
     context.addExtension(TokenizerSensor.class);
   }

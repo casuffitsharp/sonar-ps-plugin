@@ -1,0 +1,6 @@
+{
+    "sonarCloudOrganization": "casuffitsharp",
+    "projectKey": "casuffitsharp_sonar-ps-plugin",
+    "region": "EU",
+    "noteForContributors": "This file is intentionally committed to share SonarLint connected-mode settings (SonarCloud organization, project key, and region) with all contributors."
+}

@@ -8,6 +8,7 @@ import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.issue.NewIssue;
 import org.sonar.api.batch.sensor.issue.NewIssueLocation;
+import org.sonar.api.config.Configuration;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.scan.filesystem.PathResolver;
 import org.sonar.plugins.powershell.Constants;
@@ -19,8 +20,8 @@ public class IssuesFiller {
   private static final Logger LOGGER = LoggerFactory.getLogger(IssuesFiller.class);
   private final PluginConfiguration config;
 
-  public IssuesFiller(PluginConfiguration config) {
-    this.config = config;
+  public IssuesFiller(Configuration configuration) {
+    this.config = new PluginConfiguration(configuration);
   }
 
   public void fill(final SensorContext context, final File sourceDir, final List<PsIssue> issues) {

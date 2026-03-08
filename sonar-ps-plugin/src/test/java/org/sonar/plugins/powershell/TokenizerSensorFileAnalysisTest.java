@@ -56,8 +56,7 @@ public class TokenizerSensorFileAnalysisTest {
             .build();
 
     ctxTester.fileSystem().add(ti);
-    final TokenizerSensor sut =
-        new TokenizerSensor(temp, new PluginConfiguration(ctxTester.config()));
+    final TokenizerSensor sut = new TokenizerSensor(temp, ctxTester.config());
     sut.execute(ctxTester);
 
     Assert.assertEquals(18, ctxTester.cpdTokens(ti.key()).size());
@@ -91,8 +90,7 @@ public class TokenizerSensorFileAnalysisTest {
             .build();
 
     ctxTester.fileSystem().add(ti);
-    final TokenizerSensor sut =
-        new TokenizerSensor(temp, new PluginConfiguration(ctxTester.config()));
+    final TokenizerSensor sut = new TokenizerSensor(temp, ctxTester.config());
     sut.execute(ctxTester);
 
     Assert.assertNull(ctxTester.cpdTokens(ti.key()));
@@ -115,8 +113,7 @@ public class TokenizerSensorFileAnalysisTest {
             .build();
 
     ctxTester.fileSystem().add(ti);
-    final TokenizerSensor sut =
-        new TokenizerSensor(temp, new PluginConfiguration(ctxTester.config()));
+    final TokenizerSensor sut = new TokenizerSensor(temp, ctxTester.config());
     sut.execute(ctxTester);
 
     Assert.assertNull(ctxTester.cpdTokens(ti.key()));

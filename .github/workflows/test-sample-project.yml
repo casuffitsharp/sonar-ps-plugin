@@ -28,7 +28,7 @@ jobs:
         run: mvn -f sonar-ps-plugin/pom.xml clean package -DskipTests
 
       - name: Run docker compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
+        uses: hoverkraft-tech/compose-action@v2.5.0
         with:
           compose-file: "compose.yml"
           cwd: "./sampleProject"

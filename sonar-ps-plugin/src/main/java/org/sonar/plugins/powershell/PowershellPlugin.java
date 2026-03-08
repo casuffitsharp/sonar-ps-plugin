@@ -4,7 +4,7 @@ import org.sonar.api.Plugin;
 import org.sonar.api.Properties;
 import org.sonar.api.PropertyType;
 import org.sonar.api.config.PropertyDefinition;
-import org.sonar.plugins.powershell.fillers.IssuesFiller;
+import org.sonar.plugins.powershell.metrics.HalsteadMeasureComputer;
 import org.sonar.plugins.powershell.metrics.PowershellMetrics;
 import org.sonar.plugins.powershell.sensors.ScriptAnalyzerSensor;
 import org.sonar.plugins.powershell.sensors.TokenizerSensor;
@@ -31,7 +31,6 @@ public class PowershellPlugin implements Plugin {
         PropertyDefinition.builder(Constants.PS_EXECUTABLE)
             .name("Path to powershell executable")
             .description("Path to powershell executable")
-            .defaultValue("powershell.exe")
             .type(PropertyType.STRING)
             .build());
     context.addExtension(
@@ -46,6 +45,7 @@ public class PowershellPlugin implements Plugin {
             .name("Suffixes to analyze")
             .description("Suffixes supported by the plugin")
             .defaultValue(".ps1,.psm1,.psd1")
+            .multiValues(true)
             .type(PropertyType.STRING)
             .build());
 
@@ -60,10 +60,10 @@ public class PowershellPlugin implements Plugin {
     context.addExtensions(
         PowershellLanguage.class,
         ScriptAnalyzerRulesDefinition.class,
-        PluginConfiguration.class,
-        IssuesFiller.class,
-        PowershellMetrics.class);
-    context.addExtensions(PowershellQualityProfile.class, ScriptAnalyzerSensor.class);
-    context.addExtension(TokenizerSensor.class);
+        PowershellMetrics.class,
+        PowershellQualityProfile.class,
+        ScriptAnalyzerSensor.class,
+        TokenizerSensor.class,
+        HalsteadMeasureComputer.class);
   }
 }

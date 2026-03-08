@@ -1,0 +1,41 @@
+name: Test Sample Project
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: '21'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Build plugin JAR
+        run: mvn -f sonar-ps-plugin/pom.xml clean package -DskipTests
+
+      - name: Run docker compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
+        with:
+          compose-file: "compose.yml"
+          cwd: "./sampleProject"
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+      - name: Execute tests in the running services
+        working-directory: ./sampleProject
+        run: |
+          docker compose exec scanner bash /usr/src/run-scanner.sh

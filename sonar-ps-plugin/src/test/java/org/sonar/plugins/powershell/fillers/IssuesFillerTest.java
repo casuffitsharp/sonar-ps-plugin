@@ -19,9 +19,9 @@ import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.issue.NewIssue;
 import org.sonar.api.batch.sensor.issue.NewIssueLocation;
+import org.sonar.api.config.Configuration;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.plugins.powershell.Constants;
-import org.sonar.plugins.powershell.PluginConfiguration;
 import org.sonar.plugins.powershell.issues.PsIssue;
 
 public class IssuesFillerTest {
@@ -31,21 +31,20 @@ public class IssuesFillerTest {
   private SensorContext context;
   private FileSystem fileSystem;
   private FilePredicates predicates;
-  private PluginConfiguration config;
+  private Configuration configuration;
   private NewIssue newIssue;
   private NewIssueLocation location;
   private IssuesFiller sut;
 
   @Before
-  @SuppressWarnings("unchecked")
   public void setUp() {
     context = mock(SensorContext.class);
     fileSystem = mock(FileSystem.class);
     predicates = mock(FilePredicates.class);
-    config = mock(PluginConfiguration.class);
+    configuration = mock(Configuration.class);
     newIssue = mock(NewIssue.class);
     location = mock(NewIssueLocation.class);
-    sut = new IssuesFiller(config);
+    sut = new IssuesFiller(configuration);
 
     when(context.fileSystem()).thenReturn(fileSystem);
     when(fileSystem.predicates()).thenReturn(predicates);
@@ -57,7 +56,9 @@ public class IssuesFillerTest {
     when(location.message(any())).thenReturn(location);
     when(location.on(any())).thenReturn(location);
     when(location.at(any())).thenReturn(location);
-    when(config.getExternalRulesSkipList()).thenReturn(new String[0]);
+    // By default, getStringArray returns empty array (no skip rules)
+    when(configuration.getStringArray(Constants.EXTERNAL_RULES_SKIP_LIST))
+        .thenReturn(new String[0]);
     when(fileSystem.baseDir()).thenReturn(new File("."));
   }
 
@@ -83,7 +84,7 @@ public class IssuesFillerTest {
 
   @Test
   public void shouldSkipRulesInSkipList() {
-    when(config.getExternalRulesSkipList())
+    when(configuration.getStringArray(Constants.EXTERNAL_RULES_SKIP_LIST))
         .thenReturn(new String[] {Constants.REPO_KEY + ":RuleId"});
 
     PsIssue issue = new PsIssue("RuleId", "message", 1, "MAJOR", "test.ps1");

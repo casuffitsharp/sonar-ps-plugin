@@ -1,10 +1,15 @@
 package org.sonar.plugins.powershell;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonar.api.issue.impact.SoftwareQuality;
+import org.sonar.api.rules.CleanCodeAttribute;
+import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RulesDefinition;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -13,6 +18,17 @@ import org.w3c.dom.NodeList;
 public class ScriptAnalyzerRulesDefinition implements RulesDefinition {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ScriptAnalyzerRulesDefinition.class);
+
+  private static final Map<String, org.sonar.api.issue.impact.Severity> SEVERITY_MAPPING =
+      new HashMap<>();
+
+  static {
+    SEVERITY_MAPPING.put("INFO", org.sonar.api.issue.impact.Severity.LOW);
+    SEVERITY_MAPPING.put("MINOR", org.sonar.api.issue.impact.Severity.LOW);
+    SEVERITY_MAPPING.put("MAJOR", org.sonar.api.issue.impact.Severity.MEDIUM);
+    SEVERITY_MAPPING.put("CRITICAL", org.sonar.api.issue.impact.Severity.HIGH);
+    SEVERITY_MAPPING.put("BLOCKER", org.sonar.api.issue.impact.Severity.BLOCKER);
+  }
 
   public void define(final Context context) {
     final String repositoryKey = Constants.REPO_KEY;
@@ -61,12 +77,45 @@ public class ScriptAnalyzerRulesDefinition implements RulesDefinition {
 
       final String constantPerIssue = getChild(node, "debtRemediationFunctionCoefficient");
       final String severity = getChild(node, "severity");
+      final String type = getChild(node, "type");
+      final String cleanCodeAttribute = getChild(node, "cleanCodeAttribute");
+      final String softwareQualityImpact = getChild(node, "softwareQualityImpact");
+
       final NewRule rule =
           repository
               .createRule(key)
               .setName(name)
-              .setMarkdownDescription(description)
+              .setHtmlDescription(description)
               .setSeverity(severity);
+
+      if (type != null && !type.trim().isEmpty()) {
+        try {
+          rule.setType(RuleType.valueOf(type.trim()));
+        } catch (IllegalArgumentException e) {
+          LOGGER.warn("Unknown rule type: {}", type);
+        }
+      }
+
+      if (cleanCodeAttribute != null && !cleanCodeAttribute.trim().isEmpty()) {
+        try {
+          rule.setCleanCodeAttribute(CleanCodeAttribute.valueOf(cleanCodeAttribute.trim()));
+        } catch (IllegalArgumentException e) {
+          LOGGER.warn("Unknown clean code attribute: {}", cleanCodeAttribute);
+        }
+      }
+
+      if (softwareQualityImpact != null && !softwareQualityImpact.trim().isEmpty()) {
+        try {
+          SoftwareQuality quality = SoftwareQuality.valueOf(softwareQualityImpact.trim());
+          org.sonar.api.issue.impact.Severity impactSeverity =
+              SEVERITY_MAPPING.getOrDefault(
+                  severity.trim(), org.sonar.api.issue.impact.Severity.MEDIUM);
+          rule.addDefaultImpact(quality, impactSeverity);
+        } catch (IllegalArgumentException e) {
+          LOGGER.warn("Unknown software quality: {}", softwareQualityImpact);
+        }
+      }
+
       rule.setDebtRemediationFunction(
           rule.debtRemediationFunctions().constantPerIssue(constantPerIssue));
     } catch (final Exception e) {

@@ -1,0 +1,30 @@
+services:
+  sonarqube:
+    container_name: sampleproject-sonarqube
+    image: sonarqube:26.1.0.118079-community
+    volumes:
+      - ../sonar-ps-plugin/target/sonar-ps-plugin.jar:/opt/sonarqube/extensions/plugins/sonar-ps-plugin.jar
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/api/system/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  scanner:
+    container_name: sampleproject-scanner
+    build:
+      context: .
+      dockerfile: scanner.Dockerfile
+    depends_on:
+      sonarqube:
+        condition: service_healthy
+    volumes:
+      - ./src:/usr/src/sampleProject
+      - ./run-scanner.sh:/usr/src/run-scanner.sh
+      - ./setup-sonarqube.sh:/usr/src/setup-sonarqube.sh
+    entrypoint: ["bash", "-c", "bash /usr/src/setup-sonarqube.sh && tail -f /dev/null"]

@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.FilePredicates;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.config.Configuration;
 import org.sonar.api.utils.TempFolder;
-import org.sonar.plugins.powershell.PluginConfiguration;
 import org.sonar.plugins.powershell.PowershellLanguage;
 import org.sonar.plugins.powershell.ast.Tokens;
 import org.sonar.plugins.powershell.fillers.CognitiveComplexityFiller;
@@ -41,7 +41,7 @@ public class TokenizerSensor extends BaseSensor {
   private final TokensReader reader = new TokensReader();
   private final TempFolder folder;
 
-  public TokenizerSensor(final TempFolder folder, PluginConfiguration config) {
+  public TokenizerSensor(final TempFolder folder, Configuration config) {
     super(config);
     this.folder = folder;
   }

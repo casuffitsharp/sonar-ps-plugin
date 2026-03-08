@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.SensorDescriptor;
+import org.sonar.api.config.Configuration;
 import org.sonar.api.utils.TempFolder;
 import org.sonar.plugins.powershell.Constants;
 import org.sonar.plugins.powershell.PluginConfiguration;
@@ -22,8 +23,8 @@ public abstract class BaseSensor implements org.sonar.api.batch.sensor.Sensor {
   private static final Logger LOGGER = LoggerFactory.getLogger(BaseSensor.class);
   protected final PluginConfiguration config;
 
-  protected BaseSensor(PluginConfiguration config) {
-    this.config = config;
+  protected BaseSensor(Configuration configuration) {
+    this.config = new PluginConfiguration(configuration);
   }
 
   @Override

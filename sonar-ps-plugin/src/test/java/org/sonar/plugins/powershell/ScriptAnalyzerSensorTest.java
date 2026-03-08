@@ -13,7 +13,6 @@ import org.sonar.api.batch.fs.internal.DefaultInputFile;
 import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.api.impl.utils.JUnitTempFolder;
-import org.sonar.plugins.powershell.fillers.IssuesFiller;
 import org.sonar.plugins.powershell.sensors.ScriptAnalyzerSensor;
 
 public class ScriptAnalyzerSensorTest {
@@ -38,9 +37,7 @@ public class ScriptAnalyzerSensorTest {
             .build();
     ctxTester.fileSystem().add(ti);
 
-    PluginConfiguration config = new PluginConfiguration(ctxTester.config());
-    IssuesFiller filler = new IssuesFiller(config);
-    ScriptAnalyzerSensor s = new ScriptAnalyzerSensor(temp, config, filler);
+    ScriptAnalyzerSensor s = new ScriptAnalyzerSensor(temp, ctxTester.config());
     s.execute(ctxTester);
 
     Assert.assertEquals(4, ctxTester.allIssues().size());
@@ -68,9 +65,7 @@ public class ScriptAnalyzerSensorTest {
             .build();
     ctxTester.fileSystem().add(ti);
 
-    PluginConfiguration config = new PluginConfiguration(ctxTester.config());
-    IssuesFiller filler = new IssuesFiller(config);
-    ScriptAnalyzerSensor s = new ScriptAnalyzerSensor(temp, config, filler);
+    ScriptAnalyzerSensor s = new ScriptAnalyzerSensor(temp, ctxTester.config());
     s.execute(ctxTester);
 
     Assert.assertEquals(0, ctxTester.allIssues().size());
@@ -81,9 +76,7 @@ public class ScriptAnalyzerSensorTest {
     SensorContextTester ctxTester = SensorContextTester.create(folder.getRoot());
     ctxTester.settings().setProperty(Constants.SKIP_PLUGIN, "true");
 
-    PluginConfiguration config = new PluginConfiguration(ctxTester.config());
-    IssuesFiller filler = new IssuesFiller(config);
-    ScriptAnalyzerSensor s = new ScriptAnalyzerSensor(temp, config, filler);
+    ScriptAnalyzerSensor s = new ScriptAnalyzerSensor(temp, ctxTester.config());
     s.execute(ctxTester);
 
     Assert.assertEquals(0, ctxTester.allIssues().size());

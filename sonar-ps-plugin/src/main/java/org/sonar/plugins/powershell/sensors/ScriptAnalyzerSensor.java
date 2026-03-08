@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.config.Configuration;
 import org.sonar.api.utils.TempFolder;
-import org.sonar.plugins.powershell.PluginConfiguration;
 import org.sonar.plugins.powershell.fillers.IssuesFiller;
 import org.sonar.plugins.powershell.issues.PsIssue;
 import org.sonar.plugins.powershell.readers.IssuesReader;
@@ -21,11 +21,10 @@ public class ScriptAnalyzerSensor extends BaseSensor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ScriptAnalyzerSensor.class);
 
-  public ScriptAnalyzerSensor(
-      final TempFolder folder, PluginConfiguration config, IssuesFiller issuesFiller) {
+  public ScriptAnalyzerSensor(final TempFolder folder, Configuration config) {
     super(config);
     this.folder = folder;
-    this.issuesFiller = issuesFiller;
+    this.issuesFiller = new IssuesFiller(config);
   }
 
   @Override

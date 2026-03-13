@@ -18,10 +18,35 @@ Open an issue with the `enhancement` label describing the feature and its motiva
 
 ### Submitting pull requests
 
-1. Fork the repository and create a branch from `main`
-2. Make your changes with appropriate tests
-3. Ensure the build passes: `mvn -f sonar-ps-plugin/pom.xml verify`
-4. Submit a pull request describing the changes
+1. Fork the repository and create a branch from `main`.
+2. Make your changes with appropriate tests.
+3. Ensure the build passes: `mvn -f sonar-ps-plugin/pom.xml verify`.
+4. Submit a pull request and follow our integrity standards below.
+
+## Pull Request Standards
+
+To maintain a high-quality project history and automate our release process, we enforce the following standards via automated checks:
+
+### 1. Title Convention (Conventional Commits)
+Pull Request titles must follow the [Conventional Commits](https://www.conventionalcommits.org) specification:
+
+`<type>[optional scope]: <description>`
+
+- **Types**: `feat`, `fix`, `chore`, `docs`, `refactor`, `perf`, `test`, `style`, `build`, `ci`.
+- **Breaking Changes**: Add a `!` after the type (e.g., `feat!: change return type`).
+- **Scopes (Optional)**: `core`, `ci`, `deps`, `rules`, `analyzer`, `maven`.
+
+**Examples**:
+- `feat(rules): add new rule for pipeline security`
+- `fix: resolve NPE in IssuesFiller`
+- `chore(deps): bump org.mockito to 5.23.0`
+
+### 2. Labels
+Every Pull Request must have at least one valid label from:
+`feature`, `enhancement`, `bug`, `fix`, `chore`, `refactor`, `dependencies`, `documentation`, `major`, `skip-changelog`.
+
+> [!IMPORTANT]
+> Use the `major` label and the `!` suffix in the title for breaking changes to trigger a major version release.
 
 ## Development setup
 

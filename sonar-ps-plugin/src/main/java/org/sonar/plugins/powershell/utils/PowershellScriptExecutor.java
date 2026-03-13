@@ -43,6 +43,7 @@ public class PowershellScriptExecutor {
   private final long timeout;
   private final TimeUnit timeoutUnit;
   private final boolean inheritIO;
+  private final boolean logStdout;
   private final ProcessStarter processStarter;
 
   private PowershellScriptExecutor(Builder builder) {
@@ -52,6 +53,7 @@ public class PowershellScriptExecutor {
     this.timeout = builder.timeout;
     this.timeoutUnit = builder.timeoutUnit;
     this.inheritIO = builder.inheritIO;
+    this.logStdout = builder.logStdout;
     this.processStarter = builder.processStarter;
   }
 
@@ -73,8 +75,9 @@ public class PowershellScriptExecutor {
 
     try {
       if (!inheritIO) {
-        // We manually manage the executor lifecycle instead of try-with-resources because
-        // in Java 21, ExecutorService.close() (called by try-with-resources) blocks indefinitely.
+        // We manually manage the executor lifecycle instead of try-with-resources
+        // because in Java 21, ExecutorService.close() (called by try-with-resources)
+        // blocks indefinitely.
         // We want to ensure we respect our own timeout logic.
         @SuppressWarnings("java:S2095")
         final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -198,6 +201,9 @@ public class PowershellScriptExecutor {
       String line;
       while ((line = reader.readLine()) != null) {
         builder.append(line).append(System.lineSeparator());
+        if (logStdout) {
+          LOG.info(line);
+        }
       }
     }
     return builder.toString();
@@ -215,7 +221,13 @@ public class PowershellScriptExecutor {
     private long timeout = 0;
     private TimeUnit timeoutUnit = TimeUnit.SECONDS;
     private boolean inheritIO = true;
+    private boolean logStdout = false;
     private ProcessStarter processStarter = DEFAULT_STARTER;
+
+    public Builder withLogStdout(boolean logStdout) {
+      this.logStdout = logStdout;
+      return this;
+    }
 
     public Builder withExecutable(String executable) {
       this.executable = executable;
@@ -323,7 +335,8 @@ public class PowershellScriptExecutor {
     @Override
     public String toString() {
       return String.format(
-          "ExitCode: %d, TimedOut: %b, Interrupted: %b", exitCode, timedOut, interrupted);
+          "ExitCode: %d, TimedOut: %b, Interrupted: %b, StdOut: [%s], StdErr: [%s]",
+          exitCode, timedOut, interrupted, stdOut, stdErr);
     }
   }
 }

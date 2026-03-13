@@ -33,16 +33,17 @@ This plugin calculates several complexity metrics for PowerShell scripts:
 2. Download the plugin from the [releases](https://github.com/casuffitsharp/sonar-ps-plugin/releases) and copy it to SonarQube's `extensions/plugins` directory
 3. Start SonarQube and enable rules
 4. Prepare build agent machines:
-   - **WINDOWS**:
-     - Install [PSScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer) on your build machine where you plan to run sonar scanner:
-     - In a PowerShell terminal run (more [info](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules#installing-psscriptanalyzer)): `Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope "CurrentUser" -Force`
-     - Verify the module installed successfully: `Invoke-ScriptAnalyzer -ScriptDefinition '"b" = "b"; function eliminate-file () { }'`
-     - You can check the [sample project](https://github.com/casuffitsharp/sonar-ps-plugin/tree/master/sampleProject) to test the plugin and verify configuration
-   - **LINUX**:
-     - Install PowerShell on Linux (for example Ubuntu: https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.4)
-     - Install PSScriptAnalyzer: `pwsh -Command "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force"`
-     - Test the module: `pwsh -Command "Invoke-ScriptAnalyzer -ScriptDefinition '\"b\" = \"b\"; function eliminate-file () { }'"`
-     - Specify the `sonar.ps.executable` property to point to the PowerShell executable on Linux (find it with `whereis pwsh`): `sonar.ps.executable="/usr/bin/pwsh"`
+
+The plugin requires **PSScriptAnalyzer 1.24.0**. You can either install it manually or let the plugin handle it.
+
+### Option A: Automatic Installation (Default)
+The plugin handles the installation of the latest **PSScriptAnalyzer** (minimum 1.24.0) automatically.
+
+### Option B: Manual Management
+If you prefer to manage the module yourself, disable auto-installation and ensure the module (>= 1.24.0) is present:
+- **Scanner Command**: `-Dsonar.ps.psscriptanalyzer.autoinstall=false`
+- **WINDOWS**: `Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope "CurrentUser" -Force`
+- **LINUX**: `pwsh -Command "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force"`
 
 ## Configuration
 
@@ -55,25 +56,23 @@ The following options can be overridden either in SonarQube Administration or in
 | `sonar.ps.tokenizer.skip` | Skip tokenizer (may be time consuming) | `false` |
 | `sonar.ps.tokenizer.timeout` | Max seconds to wait for tokenizer results | `3600` |
 | `sonar.ps.plugin.skip` | Skip plugin entirely (no sensors run) | `false` |
+| `sonar.ps.psscriptanalyzer.autoinstall` | Automatically install PSScriptAnalyzer (min 1.24.0) if missing | `true` |
 | `sonar.ps.external.rules.skip` | Comma-separated `repo:ruleId` pairs to skip reporting | _(none)_ |
 
 ## Requirements
 
 | Plugin version | SonarQube | PSScriptAnalyzer | Java |
 |---|---|---|---|
+| [1.0.0](https://github.com/casuffitsharp/sonar-ps-plugin/releases/tag/1.0.0) | 26.1+ | 1.24.0+ | 21+ |
 | [0.5.3](https://github.com/gretard/sonar-ps-plugin/releases/tag/0.5.3) | 8.9.2+ | 1.20+ | 17+ |
 | [0.5.1](https://github.com/gretard/sonar-ps-plugin/releases/tag/0.5.1) | 8.9.2+ | 1.20+ | 11+ |
 | [0.5.0](https://github.com/gretard/sonar-ps-plugin/releases/tag/0.5.0) | 6.7.7+ | 1.18.1 | 8+ |
-| [0.3.0](https://github.com/gretard/sonar-ps-plugin/releases/tag/0.3.0) | 6.3+ | 1.17.1 | 8+ |
 
 ## Building
 
 Requirements: JDK 21+, Maven, PSScriptAnalyzer
 
 ```bash
-# Install PSScriptAnalyzer (required for tests)
-pwsh -Command "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force"
-
 # Build the plugin
 mvn -f sonar-ps-plugin/pom.xml package
 ```

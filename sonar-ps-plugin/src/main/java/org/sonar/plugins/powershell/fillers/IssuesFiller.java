@@ -42,7 +42,9 @@ public class IssuesFiller {
           continue;
         }
 
-        final String fsFile = new PathResolver().relativePath(sourceDir, new File(initialFile));
+        final File issueFile = new File(initialFile).getCanonicalFile();
+        final File canonicalSourceDir = sourceDir.getCanonicalFile();
+        final String fsFile = new PathResolver().relativePath(canonicalSourceDir, issueFile);
         final String message = issue.message();
         int issueLine = issue.line();
         final RuleKey ruleKey = RuleKey.of(repoKey, ruleName);

@@ -127,6 +127,5 @@ Foreach ($item in $tokens) {
 
 $xmlWriter.WriteEndElement();
 $xmlWriter.WriteEndDocument();
-$xmlWriter.Finalize;
-$xmlWriter.Flush;
+$xmlWriter.Flush();
 $xmlWriter.Close();

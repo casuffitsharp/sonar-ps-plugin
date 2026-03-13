@@ -110,13 +110,11 @@ $xmlWriter.WriteEndElement();
 $xmlWriter.WriteEndDocument();
     
 # Finish The Document
-$xmlWriter.Finalize
-$xmlWriter.Flush
+$xmlWriter.Flush()
 $xmlWriter.Close();
 
 $xmlProfileWriter.WriteEndDocument();	
 
 # Finish The Document
-$xmlProfileWriter.Finalize
-$xmlProfileWriter.Flush
+$xmlProfileWriter.Flush()
 $xmlProfileWriter.Close();

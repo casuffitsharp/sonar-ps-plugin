@@ -43,6 +43,7 @@ public class PowershellScriptExecutor {
   private final long timeout;
   private final TimeUnit timeoutUnit;
   private final boolean inheritIO;
+  private final boolean logStdout;
   private final ProcessStarter processStarter;
 
   private PowershellScriptExecutor(Builder builder) {
@@ -52,6 +53,7 @@ public class PowershellScriptExecutor {
     this.timeout = builder.timeout;
     this.timeoutUnit = builder.timeoutUnit;
     this.inheritIO = builder.inheritIO;
+    this.logStdout = builder.logStdout;
     this.processStarter = builder.processStarter;
   }
 
@@ -73,8 +75,9 @@ public class PowershellScriptExecutor {
 
     try {
       if (!inheritIO) {
-        // We manually manage the executor lifecycle instead of try-with-resources because
-        // in Java 21, ExecutorService.close() (called by try-with-resources) blocks indefinitely.
+        // We manually manage the executor lifecycle instead of try-with-resources
+        // because in Java 21, ExecutorService.close() (called by try-with-resources)
+        // blocks indefinitely.
         // We want to ensure we respect our own timeout logic.
         @SuppressWarnings("java:S2095")
         final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -142,7 +145,7 @@ public class PowershellScriptExecutor {
     return CompletableFuture.supplyAsync(
         () -> {
           try {
-            return readStream(stream);
+            return readStream(stream, name);
           } catch (IOException e) {
             LOG.warn("Error reading {}", name, e);
             return "";
@@ -191,13 +194,19 @@ public class PowershellScriptExecutor {
     }
   }
 
-  private String readStream(InputStream stream) throws IOException {
+  private String readStream(InputStream stream, String streamName) throws IOException {
     StringBuilder builder = new StringBuilder();
+    String upperStreamName = streamName.toUpperCase(java.util.Locale.ROOT);
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         builder.append(line).append(System.lineSeparator());
+        if ("stdout".equalsIgnoreCase(streamName) && logStdout && LOG.isInfoEnabled()) {
+          LOG.info("[{}] {}", upperStreamName, line);
+        } else if ("stderr".equalsIgnoreCase(streamName) && LOG.isDebugEnabled()) {
+          LOG.debug("[{}] {}", upperStreamName, line);
+        }
       }
     }
     return builder.toString();
@@ -215,7 +224,13 @@ public class PowershellScriptExecutor {
     private long timeout = 0;
     private TimeUnit timeoutUnit = TimeUnit.SECONDS;
     private boolean inheritIO = true;
+    private boolean logStdout = false;
     private ProcessStarter processStarter = DEFAULT_STARTER;
+
+    public Builder withLogStdout(boolean logStdout) {
+      this.logStdout = logStdout;
+      return this;
+    }
 
     public Builder withExecutable(String executable) {
       this.executable = executable;
@@ -323,7 +338,15 @@ public class PowershellScriptExecutor {
     @Override
     public String toString() {
       return String.format(
-          "ExitCode: %d, TimedOut: %b, Interrupted: %b", exitCode, timedOut, interrupted);
+          "ExitCode: %d, TimedOut: %b, Interrupted: %b, StdOut: [%s], StdErr: [%s]",
+          exitCode, timedOut, interrupted, truncate(stdOut), truncate(stdErr));
+    }
+
+    private String truncate(String s) {
+      if (s == null || s.length() <= 500) {
+        return s;
+      }
+      return s.substring(0, 500) + "... [TRUNCATED]";
     }
   }
 }

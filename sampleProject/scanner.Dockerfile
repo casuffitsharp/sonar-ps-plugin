@@ -18,4 +18,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     jq \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner \
-    && pwsh -Command "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope AllUsers -Force"
+    && pwsh -NoProfile -Command '$ErrorActionPreference = "Stop"; \
+        Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.24.0 \
+        -Scope AllUsers -Force -ErrorAction Stop'

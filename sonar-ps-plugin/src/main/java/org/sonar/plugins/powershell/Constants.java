@@ -12,6 +12,10 @@ public final class Constants {
 
   public static final String PS_EXECUTABLE = "sonar.ps.executable";
 
+  public static final String PS_ANALYZER_DEFAULT_VERSION = "1.24.0";
+
+  public static final String PS_ANALYZER_AUTO_INSTALL = "sonar.ps.psscriptanalyzer.autoinstall";
+
   public static final String SKIP_PLUGIN = "sonar.ps.plugin.skip";
 
   public static final String EXTERNAL_RULES_SKIP_LIST = "sonar.ps.external.rules.skip";

@@ -8,6 +8,7 @@ import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.config.Configuration;
 import org.sonar.api.utils.TempFolder;
+import org.sonar.plugins.powershell.Constants;
 import org.sonar.plugins.powershell.fillers.IssuesFiller;
 import org.sonar.plugins.powershell.issues.PsIssue;
 import org.sonar.plugins.powershell.readers.IssuesReader;
@@ -31,7 +32,7 @@ public class ScriptAnalyzerSensor extends BaseSensor {
   protected void innerExecute(final SensorContext context) {
     try {
       final FileSystem fileSystem = context.fileSystem();
-      final File baseDir = fileSystem.baseDir();
+      final File baseDir = fileSystem.baseDir().getCanonicalFile();
       final String sourceDir = baseDir.getAbsolutePath();
       final String outFile = folder.newFile().toPath().toFile().getAbsolutePath();
 
@@ -42,22 +43,28 @@ public class ScriptAnalyzerSensor extends BaseSensor {
               .withPathArgument(sourceDir)
               .withArgument("-output")
               .withPathArgument(outFile)
+              .withArgument("-minAnalyzerVersion")
+              .withArgument(Constants.PS_ANALYZER_DEFAULT_VERSION)
+              .withArgument("-autoInstall")
+              .withArgument(String.valueOf(config.isPsAnalyzerAutoInstall()))
+              .withArgument("-suffixes")
+              .withArgument(String.join(",", config.getFileSuffixes()))
+              .withLogStdout(true)
               .useInheritIO(false);
 
       LOGGER.info("Starting Script-Analyzer using powershell");
       PowershellScriptExecutor.ExecutionResult result = executorBuilder.build().execute();
 
       if (!result.isSuccess()) {
-        LOGGER.info(
-            "Error executing Powershell Script-Analyzer analyzer. Maybe Script-Analyzer is not installed? {}. Details: {}",
-            result,
-            result.getStdErr());
+        LOGGER.error("PowerShell execution failed: {}", result);
         return;
       }
 
       final File outputFile = new File(outFile);
       if (!outputFile.exists() || outputFile.length() <= 0) {
-        LOGGER.warn("Analysis was not run ok, and output file was empty at: {}", outFile);
+        LOGGER.warn("Analysis finished with Exit Code 0 but output file is empty.");
+        LOGGER.warn("PS STDOUT: {}", result.getStdOut());
+        LOGGER.warn("PS STDERR: {}", result.getStdErr());
         return;
       }
 

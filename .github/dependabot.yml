@@ -5,18 +5,18 @@ updates:
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "chore(deps):"
+      prefix: "build(deps):"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "chore(deps):"
+      prefix: "ci(deps):"
 
   - package-ecosystem: "docker"
     directory: "/sampleProject"
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "chore(deps):"
+      prefix: "docs(deps):"

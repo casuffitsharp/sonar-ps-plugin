@@ -31,6 +31,14 @@ public class IssuesFiller {
     for (String s : skipRulesArray) {
       skipRules.add(s.toLowerCase().trim());
     }
+    File canonicalSourceDir;
+    try {
+      canonicalSourceDir = sourceDir.getCanonicalFile();
+    } catch (java.io.IOException e) {
+      LOGGER.warn("Failed to get canonical path for source directory: {}", sourceDir, e);
+      canonicalSourceDir = sourceDir;
+    }
+    final PathResolver pathResolver = new PathResolver();
     for (final PsIssue issue : issues) {
       try {
         final String ruleName = issue.ruleId();
@@ -43,8 +51,7 @@ public class IssuesFiller {
         }
 
         final File issueFile = new File(initialFile).getCanonicalFile();
-        final File canonicalSourceDir = sourceDir.getCanonicalFile();
-        final String fsFile = new PathResolver().relativePath(canonicalSourceDir, issueFile);
+        final String fsFile = pathResolver.relativePath(canonicalSourceDir, issueFile);
         final String message = issue.message();
         int issueLine = issue.line();
         final RuleKey ruleKey = RuleKey.of(repoKey, ruleName);

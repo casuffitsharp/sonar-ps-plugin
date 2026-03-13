@@ -1,4 +1,4 @@
-# Normalizar quebras de linha para LF
+# Normalize line endings: LF for shell scripts, CRLF for PowerShell scripts
 *.sh text eol=lf
 *.ps1 text eol=crlf
 *.psm1 text eol=crlf

@@ -16,7 +16,7 @@ function Install-RequiredModule {
         
         $provider = Get-PackageProvider -Name NuGet -ListAvailable -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($null -eq $provider) {
-            Write-Host "NuGet provider not found. Installing NuGet provider..."
+            Write-Output "NuGet provider not found. Installing NuGet provider..."
             $providerParams = @{
                 Name           = 'NuGet'
                 MinimumVersion = '2.8.5.201'
@@ -33,7 +33,7 @@ function Install-RequiredModule {
             Install-PackageProvider @providerParams | Out-Null
         }
 
-        Write-Host "Installing ${Name} module..."
+        Write-Output "Installing ${Name} module..."
         $installParams = @{
             Name         = $Name
             Scope        = 'CurrentUser'
@@ -49,7 +49,7 @@ function Install-RequiredModule {
         }
 
         Install-Module @installParams
-        Write-Host "Successfully installed ${Name}."
+        Write-Output "Successfully installed ${Name}."
     }
     catch {
         Write-Error "Failed to install ${Name}: $($_.Exception.Message)"
@@ -62,9 +62,13 @@ $module = Get-Module -ListAvailable $moduleName | Where-Object { [version]$_.Ver
 
 if (-not $module) {
     if ($isAutoInstall) {
-        Write-Host "${moduleName} (>= $minAnalyzerVersion) not found. Attempting to install the latest version..."
+        Write-Output "${moduleName} (>= $minAnalyzerVersion) not found. Attempting to install the latest version..."
         Install-RequiredModule -Name $moduleName
-        $module = Get-Module -ListAvailable $moduleName | Sort-Object Version -Descending | Select-Object -First 1
+        $module = Get-Module -ListAvailable $moduleName | Where-Object { [version]$_.Version -ge [version]$minAnalyzerVersion } | Sort-Object Version -Descending | Select-Object -First 1
+        if (-not $module) {
+            Write-Error "${moduleName} installation completed but no version >= ${minAnalyzerVersion} was found."
+            exit 1
+        }
     }
     else {
         # Check if any version at all is available
@@ -89,13 +93,15 @@ try {
     $files = Get-ChildItem -Path $inputDir -Include $include -Recurse
     $totalFiles = $files.Count
     if ($totalFiles -eq 0) {
-        Write-Warning "No files found matching suffixes ($suffixes) in $inputDir."
+        Write-Output "No files found matching suffixes ($suffixes) in $inputDir. Generating empty output."
+        $emptyResults = @() | Select-Object RuleName, Message, Line, Column, Severity, File
+        ($emptyResults | ConvertTo-Xml).Save("$output")
         exit 0
     }
 
     $groups = $files | Group-Object { $_.DirectoryName }
     $totalDirs = $groups.Count
-    Write-Host "Found $totalFiles files in $totalDirs directories to analyze."
+    Write-Output "Found $totalFiles files in $totalDirs directories to analyze."
     
     # Check if Parallel processing is available (PS 7+)
     $canParallel = (Get-Command ForEach-Object).Parameters.ContainsKey('Parallel')
@@ -104,13 +110,13 @@ try {
     $dynamicThrottle = [Math]::Max(5, $cpuCores)
 
     if ($canParallel) {
-        Write-Host "Parallel processing enabled (ThrottleLimit: $dynamicThrottle)."
+        Write-Output "Parallel processing enabled (ThrottleLimit: $dynamicThrottle)."
     }
 
     $allIssues = foreach ($group in $groups) {
         $relativePath = $group.Name.Replace($inputDir, "")
         if ([string]::IsNullOrWhiteSpace($relativePath)) { $relativePath = "." }
-        Write-Host "Analyzing directory: $relativePath ($($group.Count) files)"
+        Write-Output "Analyzing directory: $relativePath ($($group.Count) files)"
         
         if ($canParallel) {
             # Run files in parallel within the directory
@@ -125,7 +131,7 @@ try {
         }
     }
 
-    Write-Host "Analysis complete. Saving results..."
+    Write-Output "Analysis complete. Saving results..."
     ($allIssues | Select-Object RuleName, Message, Line, Column, Severity, @{Name = 'File'; Expression = { $_.Extent.File } } | ConvertTo-Xml).Save("$output")
 }
 catch {

@@ -2,6 +2,7 @@ package org.sonar.plugins.powershell.fillers;
 
 import java.io.File;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.FileSystem;
@@ -42,9 +43,13 @@ public class IssuesFiller {
     for (final PsIssue issue : issues) {
       try {
         final String ruleName = issue.ruleId();
+        final String initialFile = issue.file();
+        if (StringUtils.isBlank(ruleName)) {
+          LOGGER.error("Cannot add issue: rule name is empty for file {}", initialFile);
+          continue;
+        }
         final String repoKey = Constants.REPO_KEY;
         final String uniqueId = repoKey + ":" + ruleName;
-        final String initialFile = issue.file();
 
         if (skipRules.contains(uniqueId.toLowerCase()) || initialFile.contains(".scannerwork")) {
           continue;

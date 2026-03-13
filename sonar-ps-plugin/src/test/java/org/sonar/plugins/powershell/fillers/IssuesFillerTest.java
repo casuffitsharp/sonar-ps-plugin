@@ -104,4 +104,15 @@ public class IssuesFillerTest {
 
     verify(newIssue, never()).save();
   }
+
+  @Test
+  public void shouldSkipIssuesWithBlankRuleId() {
+    PsIssue issue = new PsIssue("", "message", 1, "MAJOR", "test.ps1");
+    PsIssue issue2 = new PsIssue("  ", "message", 1, "MAJOR", "test.ps1");
+    List<PsIssue> issues = Arrays.asList(issue, issue2);
+
+    sut.fill(context, folder.getRoot(), issues);
+
+    verify(newIssue, never()).save();
+  }
 }

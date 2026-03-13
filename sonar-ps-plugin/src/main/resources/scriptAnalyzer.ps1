@@ -113,21 +113,25 @@ try {
         Write-Output "Parallel processing enabled (ThrottleLimit: $dynamicThrottle)."
     }
 
-    $allIssues = foreach ($group in $groups) {
+    $allIssues = New-Object System.Collections.Generic.List[Object]
+    foreach ($group in $groups) {
         $relativePath = $group.Name.Replace($inputDir, "")
         if ([string]::IsNullOrWhiteSpace($relativePath)) { $relativePath = "." }
         Write-Output "Analyzing directory: $relativePath ($($group.Count) files)"
         
         if ($canParallel) {
             # Run files in parallel within the directory
-            $group.Group | ForEach-Object -Parallel {
+            $results = $group.Group | ForEach-Object -Parallel {
                 Invoke-ScriptAnalyzer -Path $_.FullName
             } -ThrottleLimit $dynamicThrottle
         }
         else {
-            $group.Group | ForEach-Object {
+            $results = $group.Group | ForEach-Object {
                 Invoke-ScriptAnalyzer -Path $_.FullName
             }
+        }
+        if ($null -ne $results) {
+            $results | ForEach-Object { $allIssues.Add($_) }
         }
     }
 

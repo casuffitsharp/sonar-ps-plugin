@@ -32,78 +32,81 @@ pr:
       - regenerateRulesDefinition.ps1
       - sampleProject/**
 
-strategy:
-  matrix:
-    linux:
-      imageName: 'ubuntu-latest'
-    mac:
-      imageName: 'macos-latest'
-    windows:
-      imageName: 'windows-latest'
-
-pool:
-  vmImage: $(imageName)
-
 variables:
   PSSCRIPTANALYZER_VERSION: '1.24.0'
   PS_MODULE_DIRECTORY: $(Pipeline.Workspace)/.psmodules
   NUGET_MIN_VERSION: '2.8.5.201'
 
-steps:
-- task: Cache@2
-  displayName: 'Cache PSScriptAnalyzer'
-  inputs:
-    key: 'psscriptanalyzer | "$(PSSCRIPTANALYZER_VERSION)" | "$(Agent.OS)"'
-    path: $(PS_MODULE_DIRECTORY)
-    cacheHitVar: PSSC_CACHE_HIT
+jobs:
+- job: Build
+  displayName: 'Build and Verify'
+  condition: and(succeeded(), not(contains(variables['System.PullRequest.SourceBranch'], 'release-please')))
+  strategy:
+    matrix:
+      linux:
+        imageName: 'ubuntu-latest'
+      mac:
+        imageName: 'macos-latest'
+      windows:
+        imageName: 'windows-latest'
+  pool:
+    vmImage: $(imageName)
+  steps:
+  - task: Cache@2
+    displayName: 'Cache PSScriptAnalyzer'
+    inputs:
+      key: 'psscriptanalyzer | "$(PSSCRIPTANALYZER_VERSION)" | "$(Agent.OS)"'
+      path: $(PS_MODULE_DIRECTORY)
+      cacheHitVar: PSSC_CACHE_HIT
 
-- task: JavaToolInstaller@1
-  displayName: 'Set up JDK 21'
-  inputs:
-    versionSpec: '21'
-    jdkArchitectureOption: 'x64'
-    jdkSourceOption: 'PreInstalled'
+  - task: JavaToolInstaller@1
+    displayName: 'Set up JDK 21'
+    inputs:
+      versionSpec: '21'
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
 
-- powershell: |
-    $modulePath = "$(PS_MODULE_DIRECTORY)"
-    if (!(Test-Path $modulePath)) {
-        New-Item -ItemType Directory -Path $modulePath -Force | Out-Null
-    }
+  - powershell: |
+      $modulePath = "$(PS_MODULE_DIRECTORY)"
+      if (!(Test-Path $modulePath)) {
+          New-Item -ItemType Directory -Path $modulePath -Force | Out-Null
+      }
+      
+      if ("$(PSSC_CACHE_HIT)" -ne "true") {
+          Write-Host "Cache miss. Installing PSScriptAnalyzer v$(PSSCRIPTANALYZER_VERSION)..."
+          if ($PSVersionTable.PSVersion.Major -lt 6) {
+              Install-PackageProvider -Name NuGet -MinimumVersion "$(NUGET_MIN_VERSION)" -Force -Confirm:$false -Scope CurrentUser | Out-Null
+          }
+          Save-Module -Name PSScriptAnalyzer -RequiredVersion "$(PSSCRIPTANALYZER_VERSION)" -Path $modulePath -Force -ErrorAction Stop
+      } else {
+          Write-Host "Cache hit. PSScriptAnalyzer restored from cache."
+      }
+      
+      # Add the cache directory to PSModulePath for subsequent steps
+      $sep = [IO.Path]::PathSeparator
+      $currentPath = [Environment]::GetEnvironmentVariable("PSModulePath")
+      if ($currentPath -notlike "*$modulePath*") {
+          $newPath = "$modulePath$sep$currentPath"
+          Write-Host "##vso[task.setvariable variable=PSModulePath]$newPath"
+          Write-Host "Updated PSModulePath for subsequent steps."
+      }
+    displayName: 'Install or Restore PSScriptAnalyzer'
+
+  - task: Maven@4
+    displayName: 'Maven sonar-ps-plugin/pom.xml'
+    inputs:
+      mavenPomFile: 'sonar-ps-plugin/pom.xml'
+      jdkVersionOption: '1.21'
+
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+    inputs:
+      SourceFolder: '$(system.defaultworkingdirectory)'
+      Contents: '**/*.jar'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+      artifactName: 'build-$(Agent.OS)'
     
-    if ("$(PSSC_CACHE_HIT)" -ne "true") {
-        Write-Host "Cache miss. Installing PSScriptAnalyzer v$(PSSCRIPTANALYZER_VERSION)..."
-        if ($PSVersionTable.PSVersion.Major -lt 6) {
-            Install-PackageProvider -Name NuGet -MinimumVersion "$(NUGET_MIN_VERSION)" -Force -Confirm:$false -Scope CurrentUser | Out-Null
-        }
-        Save-Module -Name PSScriptAnalyzer -RequiredVersion "$(PSSCRIPTANALYZER_VERSION)" -Path $modulePath -Force -ErrorAction Stop
-    } else {
-        Write-Host "Cache hit. PSScriptAnalyzer restored from cache."
-    }
-    
-    # Add the cache directory to PSModulePath for subsequent steps
-    $sep = [IO.Path]::PathSeparator
-    $currentPath = [Environment]::GetEnvironmentVariable("PSModulePath")
-    if ($currentPath -notlike "*$modulePath*") {
-        $newPath = "$modulePath$sep$currentPath"
-        Write-Host "##vso[task.setvariable variable=PSModulePath]$newPath"
-        Write-Host "Updated PSModulePath for subsequent steps."
-    }
-  displayName: 'Install or Restore PSScriptAnalyzer'
-
-- task: Maven@4
-  displayName: 'Maven sonar-ps-plugin/pom.xml'
-  inputs:
-    mavenPomFile: 'sonar-ps-plugin/pom.xml'
-    jdkVersionOption: '1.21'
-
-- task: CopyFiles@2
-  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
-  inputs:
-    SourceFolder: '$(system.defaultworkingdirectory)'
-    Contents: '**/*.jar'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
-    artifactName: 'build-$(Agent.OS)'    

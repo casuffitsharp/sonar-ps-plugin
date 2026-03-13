@@ -10,7 +10,7 @@ Sample scripts from: https://adamtheautomator.com/powershell-script-examples/
 To test changes to the plugin during development:
 1. Build the plugin locally using Maven:
    ```bash
-   mvn -f sonar-ps-plugin/pom.xml clean package
+   mvn -f sonar-ps-plugin/pom.xml clean package -Pdev
    ```
 2. Start the SonarQube server and Scanner using Docker Compose from the `sampleProject` folder:
    ```bash

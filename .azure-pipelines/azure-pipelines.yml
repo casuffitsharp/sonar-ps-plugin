@@ -9,11 +9,11 @@ trigger:
       - NOTICE
       - .gitignore
       - .editorconfig
-      - .github/*
-      - .vscode/*
-      - .sonarlint/*
+      - .github/**
+      - .vscode/**
+      - .sonarlint/**
       - regenerateRulesDefinition.ps1
-      - sampleProject/*
+      - sampleProject/**
 
 pr:
   branches:
@@ -26,11 +26,11 @@ pr:
       - NOTICE
       - .gitignore
       - .editorconfig
-      - .github/*
-      - .vscode/*
-      - .sonarlint/*
+      - .github/**
+      - .vscode/**
+      - .sonarlint/**
       - regenerateRulesDefinition.ps1
-      - sampleProject/*
+      - sampleProject/**
 
 strategy:
   matrix:

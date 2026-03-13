@@ -24,7 +24,9 @@ jobs:
 
     if: >
       github.event_name == 'push' ||
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
+      (github.event_name == 'pull_request' && 
+       github.event.pull_request.head.repo.fork == false && 
+       secrets.SONAR_TOKEN != '')
 
     steps:
       - uses: actions/checkout@v6

@@ -35,17 +35,20 @@ public class PluginConfiguration {
         .orElse(3600L);
   }
 
+  public String[] getFileSuffixes() {
+    return getFileSuffixes(PowershellLanguage.DEFAULT_FILE_SUFFIXES);
+  }
+
   public String[] getFileSuffixes(String[] defaultSuffixes) {
-    return config
-        .get(Constants.FILE_SUFFIXES)
-        .map(
-            s ->
-                java.util.Arrays.stream(s.split(","))
-                    .map(String::trim)
-                    .map(suffix -> suffix.startsWith(".") ? suffix.substring(1) : suffix)
-                    .filter(suffix -> !suffix.isEmpty())
-                    .toArray(String[]::new))
-        .orElse(defaultSuffixes);
+    String[] suffixes = config.getStringArray(Constants.FILE_SUFFIXES);
+    if (suffixes == null || suffixes.length == 0) {
+      return defaultSuffixes;
+    }
+    return java.util.Arrays.stream(suffixes)
+        .map(String::trim)
+        .map(suffix -> suffix.startsWith(".") ? suffix.substring(1) : suffix)
+        .filter(suffix -> !suffix.isEmpty())
+        .toArray(String[]::new);
   }
 
   public String getPowershellExecutable() {
@@ -58,5 +61,9 @@ public class PluginConfiguration {
 
   public String[] getExternalRulesSkipList() {
     return config.getStringArray(Constants.EXTERNAL_RULES_SKIP_LIST);
+  }
+
+  public boolean isPsAnalyzerAutoInstall() {
+    return config.getBoolean(Constants.PS_ANALYZER_AUTO_INSTALL).orElse(true);
   }
 }

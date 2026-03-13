@@ -6,8 +6,10 @@ services:
       - ../sonar-ps-plugin/target/sonar-ps-plugin.jar:/opt/sonarqube/extensions/plugins/sonar-ps-plugin.jar
     ports:
       - "9000:9000"
+      - "5005:5005"
     environment:
-      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: true
+      SONAR_CE_JAVAOPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/api/system/status"]
       interval: 10s
@@ -23,6 +25,8 @@ services:
     depends_on:
       sonarqube:
         condition: service_healthy
+    ports:
+      - "5006:5006"
     volumes:
       - ./src:/usr/src/sampleProject
       - ./run-scanner.sh:/usr/src/run-scanner.sh

@@ -22,6 +22,9 @@ if [ -z "$TOKEN" ]; then
 fi
 
 echo "Running Sonar Scanner..."
+# Uncomment the line below to enable scanner debugging (port 5006)
+# export SONAR_SCANNER_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5006"
+
 cd /usr/src/sampleProject && sonar-scanner \
   -Dsonar.projectKey=$PROJECT_KEY \
   -Dsonar.sources=. \

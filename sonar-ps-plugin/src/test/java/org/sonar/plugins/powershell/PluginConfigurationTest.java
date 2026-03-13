@@ -57,11 +57,18 @@ public class PluginConfigurationTest {
   @Test
   public void shouldReturnFileSuffixes() {
     String[] defaults = new String[] {"ps1"};
-    when(configuration.get(Constants.FILE_SUFFIXES)).thenReturn(Optional.of("ps1,psm1,psd1"));
+    when(configuration.getStringArray(Constants.FILE_SUFFIXES))
+        .thenReturn(new String[] {"ps1", "psm1", "psd1"});
     assertArrayEquals(new String[] {"ps1", "psm1", "psd1"}, sut.getFileSuffixes(defaults));
 
-    when(configuration.get(Constants.FILE_SUFFIXES)).thenReturn(Optional.empty());
+    when(configuration.getStringArray(Constants.FILE_SUFFIXES)).thenReturn(new String[0]);
     assertArrayEquals(defaults, sut.getFileSuffixes(defaults));
+  }
+
+  @Test
+  public void shouldReturnDefaultFileSuffixesWhenNotProvided() {
+    when(configuration.getStringArray(Constants.FILE_SUFFIXES)).thenReturn(new String[0]);
+    assertArrayEquals(new String[] {"ps1", "psm1", "psd1"}, sut.getFileSuffixes());
   }
 
   @Test
@@ -79,8 +86,8 @@ public class PluginConfigurationTest {
   @Test
   public void shouldNormalizeFileSuffixes() {
     String[] defaults = new String[] {"ps1"};
-    when(configuration.get(Constants.FILE_SUFFIXES))
-        .thenReturn(Optional.of(" .ps1 , psm1 ,.psd1 "));
+    when(configuration.getStringArray(Constants.FILE_SUFFIXES))
+        .thenReturn(new String[] {" .ps1 ", " psm1 ", " .psd1 "});
     assertArrayEquals(new String[] {"ps1", "psm1", "psd1"}, sut.getFileSuffixes(defaults));
   }
 
@@ -89,5 +96,19 @@ public class PluginConfigurationTest {
     String[] skipList = new String[] {"Rule1", "Rule2"};
     when(configuration.getStringArray(Constants.EXTERNAL_RULES_SKIP_LIST)).thenReturn(skipList);
     assertArrayEquals(skipList, sut.getExternalRulesSkipList());
+  }
+
+  @Test
+  public void shouldReturnIsPsAnalyzerAutoInstall() {
+    when(configuration.getBoolean(Constants.PS_ANALYZER_AUTO_INSTALL))
+        .thenReturn(Optional.of(true));
+    assertTrue(sut.isPsAnalyzerAutoInstall());
+
+    when(configuration.getBoolean(Constants.PS_ANALYZER_AUTO_INSTALL))
+        .thenReturn(Optional.of(false));
+    assertFalse(sut.isPsAnalyzerAutoInstall());
+
+    when(configuration.getBoolean(Constants.PS_ANALYZER_AUTO_INSTALL)).thenReturn(Optional.empty());
+    assertTrue(sut.isPsAnalyzerAutoInstall());
   }
 }

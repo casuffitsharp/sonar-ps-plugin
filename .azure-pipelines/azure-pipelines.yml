@@ -2,11 +2,35 @@ trigger:
   branches:
     include:
       - main
+  paths:
+    exclude:
+      - '**/*.md'
+      - LICENSE
+      - NOTICE
+      - .gitignore
+      - .editorconfig
+      - .github/**
+      - .vscode/**
+      - .sonarlint/**
+      - regenerateRulesDefinition.ps1
+      - sampleProject/**
 
 pr:
   branches:
     include:
       - main
+  paths:
+    exclude:
+      - '**/*.md'
+      - LICENSE
+      - NOTICE
+      - .gitignore
+      - .editorconfig
+      - .github/**
+      - .vscode/**
+      - .sonarlint/**
+      - regenerateRulesDefinition.ps1
+      - sampleProject/**
 
 strategy:
   matrix:

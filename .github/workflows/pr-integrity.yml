@@ -1,0 +1,57 @@
+name: PR Integrity
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, reopened, synchronize, labeled, unlabeled, edited]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate PR Title (Conventional Commits)
+        uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            chore
+            docs
+            refactor
+            perf
+            test
+            style
+            build
+            ci
+          scopes: |
+            core
+            ci
+            deps
+            security
+            rules
+            analyzer
+            maven
+          requireScope: false
+          ignoreLabels: |
+            skip-changelog
+            bot
+
+      - name: Validate PR Labels
+        uses: agilepathway/label-checker@v1.6.65
+        with:
+          any_of: feature,enhancement,bug,fix,chore,refactor,dependencies,documentation,major,skip-changelog
+          repo_token: ${{ secrets.GITHUB_TOKEN }}

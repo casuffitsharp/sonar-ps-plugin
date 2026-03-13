@@ -4,13 +4,19 @@ updates:
     directory: "/sonar-ps-plugin"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "chore(deps):"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "chore(deps):"
 
   - package-ecosystem: "docker"
     directory: "/sampleProject"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "chore(deps):"

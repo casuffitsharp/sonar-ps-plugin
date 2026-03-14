@@ -10,6 +10,9 @@
       "package-name": "sonar-ps-plugin",
       "pom-path": "sonar-ps-plugin/pom.xml",
       "include-component-in-tag": false,
+      "skip-snapshot": true,
+      "pull-request-title-pattern": "release${scope}: release${component} ${version}",
+      "draft-pull-request": true,
       "changelog-sections": [
         {
           "type": "feat",

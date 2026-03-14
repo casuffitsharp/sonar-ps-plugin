@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/casuffitsharp/sonar-ps-plugin/compare/v1.0.0...v1.0.1) (2026-03-14)
+
+
+### Bug Fixes
+
+* enable draft releases to allow asset upload ([42b3798](https://github.com/casuffitsharp/sonar-ps-plugin/commit/42b379860894cc00d435c7c12d882bce1ce4a3b5))
+
 ## [1.0.0](https://github.com/casuffitsharp/sonar-ps-plugin/compare/v0.5.3...v1.0.0) (2026-03-14)
 
 

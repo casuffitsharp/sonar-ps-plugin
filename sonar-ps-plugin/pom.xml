@@ -21,6 +21,16 @@
 		<system>GitHub Issues</system>
 		<url>https://github.com/casuffitsharp/sonar-ps-plugin/issues</url>
 	</issueManagement>
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License v3.0</name>
+			<url>https://www.gnu.org/licenses/lgpl-3.0.txt</url>
+		</license>
+	</licenses>
+	<organization>
+		<name>casuffitsharp</name>
+		<url>https://github.com/casuffitsharp</url>
+	</organization>
 	<dependencies>
 		<dependency>
 			<groupId>jakarta.xml.bind</groupId>

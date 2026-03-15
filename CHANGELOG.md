@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.2](https://github.com/casuffitsharp/sonar-ps-plugin/compare/v1.0.1...v1.0.2) (2026-03-15)
+
+
+### Bug Fixes
+
+* optimize PSScriptAnalyzer execution and metadata ([#94](https://github.com/casuffitsharp/sonar-ps-plugin/issues/94)) ([81c60b8](https://github.com/casuffitsharp/sonar-ps-plugin/commit/81c60b87a0d1f059a1636d59c2619519e015a12f))
+
+
+### Build System
+
+* update license and organization information in pom.xml ([#92](https://github.com/casuffitsharp/sonar-ps-plugin/issues/92)) ([80fa929](https://github.com/casuffitsharp/sonar-ps-plugin/commit/80fa929d7c10b7c13586e9284258c57ec36b8e80))
+
+
+### Documentation
+
+* update plugin version to 1.0.1 in README ([#89](https://github.com/casuffitsharp/sonar-ps-plugin/issues/89)) ([7c71264](https://github.com/casuffitsharp/sonar-ps-plugin/commit/7c71264bd959dd2ca5321db13f1bd4c6787122f3))
+
 ## [1.0.1](https://github.com/casuffitsharp/sonar-ps-plugin/compare/v1.0.0...v1.0.1) (2026-03-14)
 
 

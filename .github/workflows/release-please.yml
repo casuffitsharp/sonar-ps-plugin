@@ -73,3 +73,4 @@ jobs:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: sonar-ps-plugin/target/*.jar
           fail_on_unmatched_files: true
+          draft: true

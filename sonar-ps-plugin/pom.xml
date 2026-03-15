@@ -37,13 +37,11 @@
 			<artifactId>jakarta.xml.bind-api</artifactId>
 			<version>4.0.5</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.codehaus.staxmate/staxmate -->
 		<dependency>
 			<groupId>org.codehaus.staxmate</groupId>
 			<artifactId>staxmate</artifactId>
 			<version>2.0.1</version>
 		</dependency>
-
 		<dependency>
 			<groupId>com.sun.xml.bind</groupId>
 			<artifactId>jaxb-impl</artifactId>
@@ -56,19 +54,16 @@
 			<version>${sonar.apiVersion}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.sonarsource.sonarqube/sonar-plugin-api-impl -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.20.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.21.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -122,6 +117,7 @@
 				<extensions>true</extensions>
 				<configuration>
 					<pluginClass>org.sonar.plugins.powershell.PowershellPlugin</pluginClass>
+					<requiredForLanguages>ps</requiredForLanguages>
 				</configuration>
 			</plugin>
 			<plugin>

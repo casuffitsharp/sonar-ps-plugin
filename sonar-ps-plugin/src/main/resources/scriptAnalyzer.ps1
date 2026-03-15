@@ -99,41 +99,8 @@ try {
         exit 0
     }
 
-    $groups = $files | Group-Object { $_.DirectoryName }
-    $totalDirs = $groups.Count
-    Write-Output "Found $totalFiles files in $totalDirs directories to analyze."
-    
-    # Check if Parallel processing is available (PS 7+)
-    $canParallel = (Get-Command ForEach-Object).Parameters.ContainsKey('Parallel')
-
-    $cpuCores = if ($env:NUMBER_OF_PROCESSORS) { [int]$env:NUMBER_OF_PROCESSORS } else { 2 }
-    $dynamicThrottle = [Math]::Max(5, $cpuCores)
-
-    if ($canParallel) {
-        Write-Output "Parallel processing enabled (ThrottleLimit: $dynamicThrottle)."
-    }
-
-    $allIssues = New-Object System.Collections.Generic.List[Object]
-    foreach ($group in $groups) {
-        $relativePath = $group.Name.Replace($inputDir, "")
-        if ([string]::IsNullOrWhiteSpace($relativePath)) { $relativePath = "." }
-        Write-Output "Analyzing directory: $relativePath ($($group.Count) files)"
-        
-        if ($canParallel) {
-            # Run files in parallel within the directory
-            $results = $group.Group | ForEach-Object -Parallel {
-                Invoke-ScriptAnalyzer -Path $_.FullName
-            } -ThrottleLimit $dynamicThrottle
-        }
-        else {
-            $results = $group.Group | ForEach-Object {
-                Invoke-ScriptAnalyzer -Path $_.FullName
-            }
-        }
-        if ($null -ne $results) {
-            $results | ForEach-Object { $allIssues.Add($_) }
-        }
-    }
+    Write-Output "Found $totalFiles files to analyze. Starting analysis..."
+    $allIssues = @($files | Invoke-ScriptAnalyzer -ErrorAction SilentlyContinue | Where-Object { $null -ne $_ })
 
     Write-Output "Analysis complete. Saving results..."
     ($allIssues | Select-Object RuleName, Message, Line, Column, Severity, @{Name = 'File'; Expression = { $_.Extent.File } } | ConvertTo-Xml).Save("$output")

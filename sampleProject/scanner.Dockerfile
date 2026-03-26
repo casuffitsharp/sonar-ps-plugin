@@ -1,5 +1,5 @@
 # 1) Get the Scanner CLI with bundled JRE
-FROM sonarsource/sonar-scanner-cli:12.0 AS scanner
+FROM sonarsource/sonar-scanner-cli:12.1 AS scanner
 
 # 2) Base image: Ubuntu 24.04 with PowerShell pre-installed
 FROM mcr.microsoft.com/powershell:ubuntu-24.04
